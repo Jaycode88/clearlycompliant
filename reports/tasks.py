@@ -8,12 +8,16 @@ from .generator import generate_report
 @shared_task
 def generate_report_task(order_id):
     try:
+        from mailer.tasks import send_report_email
+
         order = Order.objects.get(id=order_id)
         scan_result = ScanResult.objects.get(order=order)
 
         pdf_bytes = generate_report(order, scan_result)
 
         Report.objects.create(order=order, pdf=pdf_bytes)
+
+        send_report_email.delay(order_id)
 
     except (Order.DoesNotExist, ScanResult.DoesNotExist):
         pass
