@@ -2,6 +2,7 @@ from celery import shared_task
 from orders.models import Order
 from .models import ScanResult
 from .scanner import scan_domain
+from reports.tasks import generate_report_task
 
 
 @shared_task
@@ -28,7 +29,13 @@ def run_scan(order_id):
         )
 
         order.status = Order.Status.COMPLETE if not results['error'] else Order.Status.FAILED
-        order.save()
+        if not results['error']:
+            order.status = Order.Status.COMPLETE
+            order.save()
+            generate_report_task.delay(str(order.id))
+        else:
+            order.status = Order.Status.FAILED
+            order.save()
 
     except Order.DoesNotExist:
         pass
