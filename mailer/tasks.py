@@ -1,15 +1,31 @@
-from celery import shared_task
+import ssl
+import smtplib
+import logging
 from django.core.mail import EmailMessage
 from django.conf import settings
 from orders.models import Order
 from reports.models import Report
 
+# Patch SMTP to use unverified SSL context on Windows
+_original_starttls = smtplib.SMTP.starttls
 
-@shared_task
+def _patched_starttls(self, keyfile=None, certfile=None, context=None):
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    return _original_starttls(self, context=context)
+
+smtplib.SMTP.starttls = _patched_starttls
+
+logger = logging.getLogger(__name__)
+
+
 def send_report_email(order_id):
     try:
         order = Order.objects.get(id=order_id)
         report = Report.objects.get(order=order)
+
+        logger.info(f'Attempting to send email to {order.email}')
 
         email = EmailMessage(
             subject=f'Your GDPR Compliance Report — {order.domain}',
@@ -36,6 +52,9 @@ The ClearlyCompliant Team
         )
 
         email.send()
+        logger.info(f'Email sent successfully to {order.email}')
 
-    except (Order.DoesNotExist, Report.DoesNotExist):
-        pass
+    except (Order.DoesNotExist, Report.DoesNotExist) as e:
+        logger.error(f'Order or Report not found: {e}')
+    except Exception as e:
+        logger.error(f'Failed to send email for order {order_id}: {type(e).__name__}: {e}')

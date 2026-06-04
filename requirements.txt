@@ -3,7 +3,6 @@ asgiref==3.11.1
 beautifulsoup4==4.14.3
 billiard==4.2.4
 brotli==1.2.0
-celery==5.6.3
 certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
@@ -28,7 +27,6 @@ pyee==13.0.1
 pyphen==0.17.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
-redis==8.0.0
 reportlab==4.5.1
 requests==2.34.2
 six==1.17.0

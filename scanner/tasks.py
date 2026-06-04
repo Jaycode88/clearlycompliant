@@ -1,18 +1,20 @@
-from celery import shared_task
+import logging
 from orders.models import Order
 from .models import ScanResult
 from .scanner import scan_domain
-from reports.tasks import generate_report_task
+
+logger = logging.getLogger(__name__)
 
 
-@shared_task
 def run_scan(order_id):
     try:
         order = Order.objects.get(id=order_id)
         order.status = Order.Status.SCANNING
         order.save()
+        logger.info(f'Scanning {order.domain} for order {order_id}')
 
         results = scan_domain(order.domain)
+        logger.info(f'Scan complete for {order.domain}')
 
         ScanResult.objects.create(
             order=order,
@@ -28,14 +30,17 @@ def run_scan(order_id):
             error=results['error'],
         )
 
-        order.status = Order.Status.COMPLETE if not results['error'] else Order.Status.FAILED
         if not results['error']:
             order.status = Order.Status.COMPLETE
             order.save()
-            generate_report_task.delay(str(order.id))
+            from reports.tasks import generate_report_task
+            generate_report_task(str(order.id))
         else:
+            logger.error(f'Scan error for {order.domain}: {results["error"]}')
             order.status = Order.Status.FAILED
             order.save()
 
     except Order.DoesNotExist:
-        pass
+        logger.error(f'Order {order_id} not found')
+    except Exception as e:
+        logger.error(f'Unexpected error in run_scan for {order_id}: {e}')

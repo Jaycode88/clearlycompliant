@@ -1,15 +1,21 @@
 import json
 import stripe
+import threading
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from scanner.tasks import run_scan
+from django.shortcuts import render
 from .models import Order
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 REPORT_PRICE_PENCE = 2999  # £29.99
+
+
+def run_scan_sync(order_id):
+    from scanner.tasks import run_scan
+    run_scan(order_id)
 
 
 @require_POST
@@ -46,6 +52,10 @@ def create_payment_intent(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+def run_scan_sync(order_id):
+    from scanner.tasks import run_scan
+    run_scan(order_id)
+
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
@@ -61,14 +71,22 @@ def stripe_webhook(request):
 
     if event['type'] == 'payment_intent.succeeded':
         intent = event['data']['object']
-        order_id = intent['metadata'].get('order_id')
+        order_id = intent['metadata']['order_id']
 
         try:
             order = Order.objects.get(id=order_id)
             order.status = Order.Status.PAID
             order.save()
-            run_scan.delay(str(order.id))
+            thread = threading.Thread(target=run_scan_sync, args=(str(order.id),))
+            thread.daemon = True
+            thread.start()
         except Order.DoesNotExist:
             pass
 
     return HttpResponse(status=200)
+
+
+def checkout(request):
+    return render(request, 'orders/checkout.html', {
+        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+    })
