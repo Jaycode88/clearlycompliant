@@ -4,6 +4,7 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from scanner.tasks import run_scan
 from .models import Order
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -66,7 +67,7 @@ def stripe_webhook(request):
             order = Order.objects.get(id=order_id)
             order.status = Order.Status.PAID
             order.save()
-            # TODO: trigger scanner Celery task here
+            run_scan.delay(str(order.id))
         except Order.DoesNotExist:
             pass
 
