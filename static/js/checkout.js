@@ -23,7 +23,8 @@ const cardElement = elements.create('card', {
             color: '#1a1a2e',
             '::placeholder': { color: '#9ca3af' },
         }
-    }
+    },
+    hidePostalCode: true,
 });
 cardElement.mount('#card-element');
 

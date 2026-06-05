@@ -101,3 +101,9 @@ def checkout(request):
     return render(request, 'orders/checkout.html', {
         'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
     })
+
+def privacy_policy(request):
+    return render(request, 'legal/privacy_policy.html')
+
+def terms_and_conditions(request):
+    return render(request, 'legal/terms_and_conditions.html')

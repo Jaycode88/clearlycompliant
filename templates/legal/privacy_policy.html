@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/legal.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="legal-hero">
+    <h1>Privacy Policy</h1>
+    <p>Last updated: June 2025</p>
+</div>
+
+<div class="legal-body">
+    <div class="legal-content">
+
+        <h2>1. Who We Are</h2>
+        <p>ClearlyCompliant is operated by Joe Seabrook, trading as ClearlyCompliant. Our registered contact email is <a href="mailto:admin@clearlycompliant.co.uk">admin@clearlycompliant.co.uk</a>.</p>
+        <p>We provide automated GDPR compliance reports for websites. This privacy policy explains how we collect, use, and protect your personal data when you use our service.</p>
+
+        <h2>2. What Data We Collect</h2>
+        <p>When you purchase a report, we collect:</p>
+        <ul>
+            <li><strong>Your email address</strong> — to deliver your report and contact you if there are issues with your order.</li>
+            <li><strong>The domain you submit</strong> — to perform the compliance scan.</li>
+            <li><strong>Payment information</strong> — processed securely by Stripe. We never store your card details. Stripe's privacy policy is available at <a href="https://stripe.com/gb/privacy" target="_blank">stripe.com/gb/privacy</a>.</li>
+            <li><strong>Technical data</strong> — including IP address, browser type, and access times, collected automatically when you visit our site.</li>
+        </ul>
+
+        <h2>3. How We Use Your Data</h2>
+        <p>We use your data to:</p>
+        <ul>
+            <li>Process your payment and deliver your report — <strong>lawful basis: contract performance</strong></li>
+            <li>Contact you if there are issues with your order — <strong>lawful basis: contract performance</strong></li>
+            <li>Improve our service — <strong>lawful basis: legitimate interests</strong></li>
+            <li>Comply with legal obligations — <strong>lawful basis: legal obligation</strong></li>
+        </ul>
+        <p>We do not use your data for marketing purposes and we will never sell your data to third parties.</p>
+
+        <h2>4. Third Parties</h2>
+        <p>We share data with the following third-party processors:</p>
+        <ul>
+            <li><strong>Stripe</strong> — payment processing. Stripe is PCI DSS compliant and processes payments under their own privacy policy.</li>
+            <li><strong>IONOS</strong> — email delivery of your report via SMTP.</li>
+            <li><strong>Anthropic</strong> — AI-powered analysis of privacy policies and terms and conditions found on the scanned domain. We send only the text of public-facing policy pages to Anthropic's API. No personal data about you as a customer is sent to Anthropic.</li>
+        </ul>
+        <p>All third-party processors are contractually bound to process data only as instructed and in accordance with applicable data protection law.</p>
+
+        <h2>5. International Transfers</h2>
+        <p>Stripe and Anthropic may process data outside the UK and EEA. Both providers rely on Standard Contractual Clauses (SCCs) approved by the European Commission as the transfer mechanism for international data transfers. Stripe holds an adequacy decision for transfers to the United States under the UK-US Data Bridge.</p>
+
+        <h2>6. Data Retention</h2>
+        <ul>
+            <li><strong>Order records</strong> (domain, email, payment reference) — retained for 7 years for accounting and legal compliance purposes.</li>
+            <li><strong>Scan results and reports</strong> — retained for 90 days, after which they are permanently deleted.</li>
+            <li><strong>Technical logs</strong> — retained for 30 days.</li>
+        </ul>
+
+        <h2>7. Cookies</h2>
+        <p>We use only essential cookies necessary for the operation of our service, including session cookies and CSRF protection tokens required for secure form submission. We do not use analytics cookies or advertising cookies.</p>
+        <p>You can control cookies through your browser settings. Disabling essential cookies may prevent the checkout from functioning correctly.</p>
+
+        <h2>8. Your Rights</h2>
+        <p>Under UK GDPR, you have the following rights:</p>
+        <ul>
+            <li><strong>Right of access</strong> — you can request a copy of the personal data we hold about you.</li>
+            <li><strong>Right to rectification</strong> — you can ask us to correct inaccurate data.</li>
+            <li><strong>Right to erasure</strong> — you can ask us to delete your data, subject to legal retention obligations.</li>
+            <li><strong>Right to restriction</strong> — you can ask us to restrict processing of your data.</li>
+            <li><strong>Right to portability</strong> — you can request your data in a machine-readable format.</li>
+            <li><strong>Right to object</strong> — you can object to processing based on legitimate interests.</li>
+        </ul>
+        <p>To exercise any of these rights, please email <a href="mailto:admin@clearlycompliant.co.uk">admin@clearlycompliant.co.uk</a>. We will respond within 30 days.</p>
+        <p>You also have the right to lodge a complaint with the Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" target="_blank">ico.org.uk</a> or by calling 0303 123 1113.</p>
+
+        <h2>9. Data Security</h2>
+        <p>We implement appropriate technical and organisational measures to protect your personal data, including HTTPS encryption, secure password storage, and access controls. Payment data is handled entirely by Stripe and is never transmitted to or stored on our servers.</p>
+
+        <h2>10. Changes to This Policy</h2>
+        <p>We may update this privacy policy from time to time. The date at the top of this page indicates when it was last updated. Continued use of our service after changes constitutes acceptance of the updated policy.</p>
+
+        <h2>11. Contact</h2>
+        <p>For any privacy-related queries, please contact us at <a href="mailto:admin@clearlycompliant.co.uk">admin@clearlycompliant.co.uk</a>.</p>
+
+    </div>
+</div>
+{% endblock %}

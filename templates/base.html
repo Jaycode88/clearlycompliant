@@ -12,8 +12,98 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+   
     {% block extra_css %}{% endblock %}
     <script src="https://js.stripe.com/v3/"></script>
+
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "ClearlyCompliant GDPR Report",
+    "description": "Automated GDPR compliance report for UK websites. 23 checks covering technical security, privacy policies, cookie consent, tracking scripts and more. AI-powered analysis of privacy policy and terms and conditions. PDF report delivered by email within minutes.",
+    "url": "https://www.clearlycompliant.co.uk",
+    "brand": {
+        "@type": "Brand",
+        "name": "ClearlyCompliant"
+    },
+    "offers": {
+        "@type": "Offer",
+        "price": "29.99",
+        "priceCurrency": "GBP",
+        "availability": "https://schema.org/InStock",
+        "seller": {
+        "@type": "Organization",
+        "name": "ClearlyCompliant",
+        "email": "admin@clearlycompliant.co.uk",
+        "url": "https://www.clearlycompliant.co.uk"
+        }
+    },
+    "category": "GDPR Compliance Software",
+    "audience": {
+        "@type": "BusinessAudience",
+        "audienceType": "UK businesses with websites"
+    }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+        "@type": "Question",
+        "name": "What is ClearlyCompliant?",
+        "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ClearlyCompliant is an automated GDPR compliance reporting tool for UK businesses. You enter your website domain, pay £29.99, and receive a detailed PDF report analysing your site across 23 GDPR compliance checks within minutes."
+        }
+        },
+        {
+        "@type": "Question",
+        "name": "How much does a GDPR compliance report cost?",
+        "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A ClearlyCompliant GDPR report costs £29.99 as a one-off payment. There is no subscription or recurring fee."
+        }
+        },
+        {
+        "@type": "Question",
+        "name": "What does the GDPR compliance report check?",
+        "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The report covers 23 checks across six areas: technical security (HTTPS, security headers, mixed content), privacy and legal documents (privacy policy, cookie policy, terms and conditions), consent and cookie management, data collection (forms, newsletter signups, login systems), third-party tracking (Google Analytics, Facebook Pixel, other trackers), and user rights (unsubscribe mechanisms, DPO information, data subject rights). It also includes AI-powered analysis of your privacy policy and terms and conditions."
+        }
+        },
+        {
+        "@type": "Question",
+        "name": "How quickly will I receive my GDPR report?",
+        "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Your report is generated automatically and delivered to your email address within a few minutes of payment."
+        }
+        },
+        {
+        "@type": "Question",
+        "name": "Do I need a GDPR compliance report?",
+        "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "If your website collects any personal data from visitors — including through contact forms, cookies, analytics tools, or newsletter signups — you are required to comply with GDPR. The ICO can fine businesses up to £17.5 million for serious violations. A ClearlyCompliant report tells you exactly where your site stands and what you need to fix."
+        }
+        },
+        {
+        "@type": "Question",
+        "name": "Is this report suitable for UK businesses?",
+        "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. ClearlyCompliant is designed specifically for UK businesses and checks compliance against UK GDPR as enforced by the Information Commissioner's Office (ICO)."
+        }
+        }
+    ]
+    }
+</script>
 </head>
 <body>
     <header>
@@ -39,8 +129,8 @@
             </div>
             <div class="footer-links">
                 <strong style="color:#ffffff; margin-bottom:4px;">Legal</strong>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms & Conditions</a>
+                <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+                <a href="{% url 'terms_and_conditions' %}">Terms & Conditions</a>
             </div>
         </div>
         <div class="footer-bottom">

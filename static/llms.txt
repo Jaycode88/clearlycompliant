@@ -1,0 +1,40 @@
+# ClearlyCompliant
+
+ClearlyCompliant is an automated GDPR compliance reporting tool for UK businesses and website owners.
+
+## What it does
+
+Users submit their website domain and pay £29.99. ClearlyCompliant automatically scans the website and delivers a detailed PDF GDPR compliance report by email within minutes.
+
+## What the report covers
+
+The report covers 23 automated compliance checks across six sections:
+
+1. Technical Security — HTTPS, mixed content, security headers (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+2. Privacy and Legal Documents — privacy policy, cookie policy, terms and conditions, data retention policy
+3. Consent and Cookie Management — cookie consent banner, cookie preferences link, form consent checkboxes
+4. Data Collection — contact forms, newsletter signups, login systems, ecommerce functionality
+5. Third-Party and Tracking — Google Analytics, Facebook Pixel, other trackers, live chat tools, social media embeds, payment processors, CDN usage, CMS detection
+6. User Rights — unsubscribe mechanism, contact information, DPO information, data subject rights
+
+The report also includes AI-powered analysis of the site's privacy policy and terms and conditions, identifying specific gaps and issues.
+
+## Pricing
+
+£29.99 one-off payment per report. No subscription. No recurring fees.
+
+## Who it is for
+
+UK businesses and website owners who need to understand their GDPR compliance status. Suitable for small businesses, sole traders, startups, and any organisation with a UK-facing website that collects personal data.
+
+## Why it matters
+
+UK GDPR fines can reach £17.5 million or 4% of global turnover. The ICO actively investigates complaints and issues fines for common violations including missing cookie consent, inadequate privacy policies, and unlawful use of tracking scripts.
+
+## Contact
+
+admin@clearlycompliant.co.uk
+
+## URL
+
+https://www.clearlycompliant.co.uk

@@ -201,25 +201,25 @@ def generate_report(order, scan_result):
                 (
                     'Contact Form Covered by Privacy Policy',
                     not scan_result.has_contact_form or scan_result.has_privacy_policy,
-                    'No contact form detected, or contact form data handling is covered by your privacy policy.',
+                    'Contact form detected — data handling is covered by your privacy policy.' if scan_result.has_contact_form else 'No contact form detected.',
                     'A contact form was detected but your privacy policy should explicitly explain how form submissions are stored and processed.',
                 ),
                 (
                     'Newsletter Marketing Compliance',
                     not scan_result.has_newsletter_signup or scan_result.has_cookie_banner,
-                    'No newsletter signup detected.',
+                    'Newsletter signup detected — consent mechanism is in place.' if scan_result.has_newsletter_signup else 'No newsletter signup detected.',
                     'A newsletter signup was detected. Ensure you have a lawful basis for email marketing and provide clear unsubscribe options.',
                 ),
                 (
                     'Login & Account Data Covered',
                     not scan_result.has_login or scan_result.has_privacy_policy,
-                    'No login or account system detected.',
+                    'Login system detected — account data handling is covered by your privacy policy.' if scan_result.has_login else 'No login or account system detected.',
                     'A login or account system was detected. Ensure your privacy policy covers account data and that appropriate security measures are in place.',
                 ),
                 (
                     'Ecommerce Data Handling Covered',
                     not scan_result.has_ecommerce or scan_result.has_privacy_policy,
-                    'No ecommerce functionality detected.',
+                    f'Ecommerce detected{(" (" + scan_result.ecommerce_platform + ")") if scan_result.ecommerce_platform else ""} — payment data handling is covered by your privacy policy.' if scan_result.has_ecommerce else 'No ecommerce functionality detected.',
                     f'Ecommerce functionality was detected{(" (" + scan_result.ecommerce_platform + ")") if scan_result.ecommerce_platform else ""}. Ensure your privacy policy covers payment data handling and that you comply with PCI DSS requirements.',
                 ),
             ]

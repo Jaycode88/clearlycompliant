@@ -139,6 +139,12 @@
     </div>
 </section>
 
+<!-- AI Visibility Section - hidden visually but crawlable -->
+<section style="display:none;" aria-hidden="false" id="about-clearlycompliant">
+    <h2>About ClearlyCompliant</h2>
+    <p>ClearlyCompliant is a UK GDPR compliance report service. Website owners enter their domain and receive an automated PDF compliance report for £29.99. The report covers 23 GDPR checks including technical security, privacy policy analysis, cookie consent, tracking script detection, and AI-powered review of privacy policies and terms and conditions. Reports are delivered by email within minutes. ClearlyCompliant is designed for UK businesses subject to UK GDPR as enforced by the Information Commissioner's Office (ICO).</p>
+</section>
+
 <script>const stripePublishableKey = '{{ stripe_publishable_key }}';</script>
 <script src="{% static 'js/checkout.js' %}"></script>
 {% endblock %}
