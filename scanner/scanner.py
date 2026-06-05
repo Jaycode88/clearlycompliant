@@ -1,7 +1,8 @@
+import re
 import time
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 
 TRACKER_SIGNATURES = {
@@ -195,6 +196,33 @@ LOGIN_INDICATORS = [
     '/login', '/signin', '/my-account', '/account',
 ]
 
+COMMON_PRIVACY_PATHS = [
+    '/privacy-policy',
+    '/privacy',
+    '/privacy-notice',
+    '/data-protection',
+    '/gdpr',
+    '/legal/privacy',
+    '/about/privacy',
+]
+
+COMMON_TERMS_PATHS = [
+    '/terms-and-conditions',
+    '/terms',
+    '/terms-of-service',
+    '/terms-of-use',
+    '/legal/terms',
+    '/legal',
+    '/about/terms',
+]
+
+COMMON_COOKIE_PATHS = [
+    '/cookie-policy',
+    '/cookies',
+    '/cookie-notice',
+    '/legal/cookies',
+]
+
 
 def normalise_domain(domain):
     domain = domain.strip()
@@ -224,6 +252,17 @@ def find_policy_url(soup, base_url, keywords):
         if any(k in href or k in link_text for k in keywords):
             full_url = urljoin(base_url, a['href'])
             return full_url
+    return None
+
+
+def try_common_paths(base_url, paths):
+    parsed = urlparse(base_url)
+    root = f'{parsed.scheme}://{parsed.netloc}'
+    for path in paths:
+        url = root + path
+        response = fetch_page(url)
+        if response and response.status_code == 200:
+            return url
     return None
 
 
@@ -329,7 +368,11 @@ def scan_domain(domain):
                     break
 
         # --- Section 2: Privacy & Legal Documents ---
+
+        # Privacy policy
         privacy_url = find_policy_url(soup, base_url, ['privacy-policy', 'privacy_policy', 'privacy', 'data-protection'])
+        if not privacy_url:
+            privacy_url = try_common_paths(base_url, COMMON_PRIVACY_PATHS)
         if privacy_url:
             results['has_privacy_policy'] = True
             results['privacy_policy_url'] = privacy_url
@@ -337,13 +380,19 @@ def scan_domain(domain):
         elif any(k in text for k in PRIVACY_KEYWORDS):
             results['has_privacy_policy'] = True
 
+        # Cookie policy
         cookie_url = find_policy_url(soup, base_url, ['cookie-policy', 'cookie_policy', 'cookies'])
+        if not cookie_url:
+            cookie_url = try_common_paths(base_url, COMMON_COOKIE_PATHS)
         if cookie_url:
             results['has_cookie_policy'] = True
         elif any(k in text for k in COOKIE_POLICY_KEYWORDS):
             results['has_cookie_policy'] = True
 
+        # Terms and conditions
         terms_url = find_policy_url(soup, base_url, ['terms-and-conditions', 'terms_and_conditions', 'terms-of-service', 'terms-of-use', 'terms', 'legal'])
+        if not terms_url:
+            terms_url = try_common_paths(base_url, COMMON_TERMS_PATHS)
         if terms_url:
             results['has_terms_and_conditions'] = True
             results['terms_url'] = terms_url
@@ -491,7 +540,6 @@ def scan_domain(domain):
                 break
 
         # --- Section 6: User Rights ---
-        import re
         full_text = text + ' ' + results['privacy_policy_text'].lower()
 
         if any(k in full_text for k in UNSUBSCRIBE_KEYWORDS):

@@ -61,5 +61,9 @@ class ScanResult(models.Model):
     scanned_at = models.DateTimeField(auto_now_add=True)
     error = models.TextField(blank=True)
 
+    # AI Analysis
+    privacy_policy_ai_analysis = models.TextField(blank=True)
+    terms_ai_analysis = models.TextField(blank=True)
+
     def __str__(self):
         return f"Scan for {self.order.domain}"

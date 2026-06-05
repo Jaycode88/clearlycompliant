@@ -416,6 +416,32 @@ def generate_report(order, scan_result):
             elements.append(Spacer(1, 2*mm))
         elements.append(Spacer(1, 4*mm))
 
+    # --- AI Analysis: Privacy Policy ---
+    if scan_result.privacy_policy_ai_analysis:
+        elements.append(section_heading('AI Analysis: Privacy Policy'))
+        elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY, spaceAfter=3*mm))
+        for para in scan_result.privacy_policy_ai_analysis.split('\n'):
+            para = para.strip()
+            if para:
+                elements.append(Paragraph(
+                    para,
+                    ParagraphStyle('aitext', fontSize=10, leading=15, textColor=DARK, spaceBefore=4)
+                ))
+        elements.append(Spacer(1, 6*mm))
+
+    # --- AI Analysis: Terms & Conditions ---
+    if scan_result.terms_ai_analysis:
+        elements.append(section_heading('AI Analysis: Terms & Conditions'))
+        elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY, spaceAfter=3*mm))
+        for para in scan_result.terms_ai_analysis.split('\n'):
+            para = para.strip()
+            if para:
+                elements.append(Paragraph(
+                    para,
+                    ParagraphStyle('aitext2', fontSize=10, leading=15, textColor=DARK, spaceBefore=4)
+                ))
+        elements.append(Spacer(1, 6*mm))
+
     # --- Footer ---
     elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY))
     elements.append(Spacer(1, 3*mm))

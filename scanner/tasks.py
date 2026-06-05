@@ -2,6 +2,7 @@ import logging
 from orders.models import Order
 from .models import ScanResult
 from .scanner import scan_domain
+from .ai_analyser import analyse_privacy_policy, analyse_terms_and_conditions
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,18 @@ def run_scan(order_id):
 
         results = scan_domain(order.domain)
         logger.info(f'Scan complete for {order.domain}')
+
+        # Run AI analysis if policy texts are available
+        logger.info(f'Running AI analysis for {order.domain}')
+        privacy_analysis = analyse_privacy_policy(
+            results.get('privacy_policy_text', ''),
+            results,
+        )
+        terms_analysis = analyse_terms_and_conditions(
+            results.get('terms_text', ''),
+            results,
+        )
+        logger.info(f'AI analysis complete for {order.domain}')
 
         ScanResult.objects.create(
             order=order,
@@ -38,6 +51,8 @@ def run_scan(order_id):
             has_contact_form=results['has_contact_form'],
             has_newsletter_signup=results['has_newsletter_signup'],
             has_login=results['has_login'],
+            has_ecommerce=results['has_ecommerce'],
+            ecommerce_platform=results['ecommerce_platform'],
             has_google_analytics=results['has_google_analytics'],
             has_facebook_pixel=results['has_facebook_pixel'],
             has_other_trackers=results['has_other_trackers'],
@@ -48,17 +63,17 @@ def run_scan(order_id):
             payment_processors_found=results['payment_processors_found'],
             has_cdn=results['has_cdn'],
             cdn_found=results['cdn_found'],
+            has_social_embeds=results['has_social_embeds'],
+            social_embeds_found=results['social_embeds_found'],
             cms_detected=results['cms_detected'],
             has_unsubscribe_mechanism=results['has_unsubscribe_mechanism'],
             has_contact_info=results['has_contact_info'],
             has_dpo_info=results['has_dpo_info'],
             has_data_subject_rights=results['has_data_subject_rights'],
-            has_ecommerce=results['has_ecommerce'],
-            ecommerce_platform=results['ecommerce_platform'],
-            has_social_embeds=results['has_social_embeds'],
-            social_embeds_found=results['social_embeds_found'],
             raw_html=results['raw_html'],
             error=results['error'],
+            privacy_policy_ai_analysis=privacy_analysis.get('analysis', privacy_analysis.get('reason', '')),
+            terms_ai_analysis=terms_analysis.get('analysis', terms_analysis.get('reason', '')),
         )
 
         if not results['error']:
