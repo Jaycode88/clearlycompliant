@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="blog-hero">
+    <div class="blog-post-meta">{{ post.created_at|date:"d F Y" }}</div>
+    <h1>{{ post.title }}</h1>
+</div>
+
+<div class="blog-body">
+    <div class="blog-post-content">
+        {{ post.content|safe }}
+
+        <div class="blog-cta">
+            <h3>Is Your Website GDPR Compliant?</h3>
+            <p>Find out in minutes with our automated compliance report. 23 checks, AI-powered policy analysis, detailed PDF report — £29.99.</p>
+            <a href="/#get-report">Get Your Report — £29.99</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

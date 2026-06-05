@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="blog-hero">
+    <h1>GDPR Compliance Guides</h1>
+    <p>Practical advice for UK businesses on data protection and GDPR compliance.</p>
+</div>
+
+<div class="blog-body">
+    <div class="blog-grid">
+        {% for post in posts %}
+        <a href="{% url 'blog_post' post.slug %}" class="blog-card">
+            <div class="blog-card-content">
+                <div class="blog-date">{{ post.created_at|date:"d F Y" }}</div>
+                <h2>{{ post.title }}</h2>
+                <p>{{ post.meta_description }}</p>
+                <span class="read-more">Read more →</span>
+            </div>
+        </a>
+        {% empty %}
+        <p class="no-posts">No posts yet — check back soon.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

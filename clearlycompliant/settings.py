@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'scanner',
     'reports',
     'mailer',
+    'blog',
 ]
 
 MIDDLEWARE = [
