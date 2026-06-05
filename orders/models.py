@@ -19,5 +19,13 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # UTM Tracking
+    utm_source = models.CharField(max_length=200, blank=True)
+    utm_medium = models.CharField(max_length=200, blank=True)
+    utm_campaign = models.CharField(max_length=200, blank=True)
+    utm_term = models.CharField(max_length=200, blank=True)
+    utm_content = models.CharField(max_length=200, blank=True)
+    referrer = models.URLField(max_length=500, blank=True)
+
     def __str__(self):
         return f"{self.domain} — {self.status}"

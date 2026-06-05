@@ -43,7 +43,16 @@ def create_payment_intent(request):
         # Normalise — strip scheme
         domain = re.sub(r'^https?://', '', domain).strip('/')
 
-        order = Order.objects.create(domain=domain, email=email)
+        order = Order.objects.create(
+            domain=domain,
+            email=email,
+            utm_source=data.get('utm_source', ''),
+            utm_medium=data.get('utm_medium', ''),
+            utm_campaign=data.get('utm_campaign', ''),
+            utm_term=data.get('utm_term', ''),
+            utm_content=data.get('utm_content', ''),
+            referrer=data.get('referrer', ''),
+        )
 
         intent = stripe.PaymentIntent.create(
             amount=REPORT_PRICE_PENCE,
