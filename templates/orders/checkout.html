@@ -6,43 +6,139 @@
 {% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2>Get Your GDPR Compliance Report</h2>
-        <p>Enter your domain and we'll scan it for GDPR issues and email you a full PDF report.</p>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="badge">GDPR Compliance</div>
+    <h1>Could Your Website Be Facing a <span>£17.5 Million Fine?</span></h1>
+    <p>The ICO can fine businesses up to £17.5 million for GDPR violations. Our automated report scans your website across 23 compliance checks and tells you exactly where you stand — in minutes.</p>
+    <a href="#get-report" class="hero-cta">Get Your Compliance Report — £29.99</a>
+    <div class="hero-sub">One-off payment. No subscription. Report delivered by email within minutes.</div>
+</section>
+
+<!-- Stats Strip -->
+<div class="stats-strip">
+    <div class="stat">
+        <span class="number">€4B+</span>
+        <span class="label">GDPR fines issued since 2018</span>
     </div>
-
-    <div class="price-tag">£29.99 <span>one-off payment</span></div>
-
-    <div id="error-message" class="error-box" style="display:none;"></div>
-    <div id="success-message" class="success-box" style="display:none;"></div>
-
-    <div id="checkout-form">
-        {% csrf_token %}
-        <div class="field-group">
-            <label for="domain">Website Domain</label>
-            <input type="text" id="domain" placeholder="e.g. example.com" autocomplete="off">
-        </div>
-
-        <div class="field-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" placeholder="you@example.com">
-            <small>We'll send your report here.</small>
-        </div>
-
-        <div class="field-group">
-            <label>Card Details</label>
-            <div id="card-element"></div>
-        </div>
-
-        <button id="submit-btn" onclick="handleSubmit()">
-            <span id="btn-text">Get My Report — £29.99</span>
-            <span id="btn-spinner" style="display:none;">Processing...</span>
-        </button>
-
-        <p class="secure-note">🔒 Payments secured by Stripe. We never store your card details.</p>
+    <div class="stat">
+        <span class="number">£17.5M</span>
+        <span class="label">Maximum UK fine per violation</span>
+    </div>
+    <div class="stat">
+        <span class="number">23</span>
+        <span class="label">Compliance checks in your report</span>
+    </div>
+    <div class="stat">
+        <span class="number">£29.99</span>
+        <span class="label">One-off report cost</span>
     </div>
 </div>
+
+<!-- Pain Points -->
+<section class="pain-section">
+    <h2>Most Businesses Don't Know What They're Missing</h2>
+    <p class="section-sub">GDPR compliance isn't just about having a privacy policy. There are dozens of requirements — and regulators are actively looking for violations.</p>
+    <div class="pain-grid">
+        <div class="pain-card">
+            <div class="pain-icon">⚠️</div>
+            <h3>Hidden Tracking Scripts</h3>
+            <p>Google Analytics, Facebook Pixel and other trackers on your site may require explicit consent you're not collecting.</p>
+        </div>
+        <div class="pain-card">
+            <div class="pain-icon">📄</div>
+            <h3>Inadequate Privacy Policies</h3>
+            <p>Having a privacy policy isn't enough — it must cover everything your site actually does. Most don't.</p>
+        </div>
+        <div class="pain-card">
+            <div class="pain-icon">🍪</div>
+            <h3>Cookie Consent Issues</h3>
+            <p>Pre-ticked boxes, no opt-out, and missing cookie policies are among the most commonly fined GDPR violations.</p>
+        </div>
+        <div class="pain-card">
+            <div class="pain-icon">🔒</div>
+            <h3>Security Header Gaps</h3>
+            <p>Missing security headers leave user data vulnerable and signal to regulators that data protection isn't a priority.</p>
+        </div>
+    </div>
+</section>
+
+<!-- What's Included -->
+<section class="included-section" id="what-is-included">
+    <h2>23 Compliance Checks. One Detailed Report.</h2>
+    <p class="section-sub">Our automated scanner checks every aspect of your site's GDPR compliance and delivers a professional PDF report with actionable recommendations.</p>
+
+    <div class="checks-grid">
+        <div class="check-item"><span class="tick">✓</span> HTTPS & Security Headers</div>
+        <div class="check-item"><span class="tick">✓</span> Mixed Content Detection</div>
+        <div class="check-item"><span class="tick">✓</span> Privacy Policy Analysis</div>
+        <div class="check-item"><span class="tick">✓</span> Cookie Policy Review</div>
+        <div class="check-item"><span class="tick">✓</span> Terms & Conditions Review</div>
+        <div class="check-item"><span class="tick">✓</span> Data Retention Policy</div>
+        <div class="check-item"><span class="tick">✓</span> Cookie Consent Banner</div>
+        <div class="check-item"><span class="tick">✓</span> Cookie Preferences Link</div>
+        <div class="check-item"><span class="tick">✓</span> Form Consent Checkboxes</div>
+        <div class="check-item"><span class="tick">✓</span> Contact Form Detection</div>
+        <div class="check-item"><span class="tick">✓</span> Newsletter Signup Review</div>
+        <div class="check-item"><span class="tick">✓</span> Login & Account Systems</div>
+        <div class="check-item"><span class="tick">✓</span> Ecommerce Compliance</div>
+        <div class="check-item"><span class="tick">✓</span> Google Analytics Detection</div>
+        <div class="check-item"><span class="tick">✓</span> Facebook Pixel Detection</div>
+        <div class="check-item"><span class="tick">✓</span> Third-Party Tracker Audit</div>
+        <div class="check-item"><span class="tick">✓</span> Live Chat Tool Detection</div>
+        <div class="check-item"><span class="tick">✓</span> Social Media Embeds</div>
+        <div class="check-item"><span class="tick">✓</span> Unsubscribe Mechanism</div>
+        <div class="check-item"><span class="tick">✓</span> Contact Information</div>
+        <div class="check-item"><span class="tick">✓</span> DPO Information</div>
+        <div class="check-item"><span class="tick">✓</span> Data Subject Rights</div>
+        <div class="check-item"><span class="tick">✓</span> AI Policy Gap Analysis</div>
+    </div>
+
+    <div class="sample-report">
+        <h3>See a Sample Report</h3>
+        <p>Download an example report to see exactly what you'll receive — including the AI-powered policy analysis.</p>
+        <a href="{% static 'sample-report.pdf' %}" target="_blank">Download Sample Report (PDF)</a>
+    </div>
+</section>
+
+<!-- Checkout -->
+<section class="checkout-section" id="get-report">
+    <h2>Get Your GDPR Compliance Report</h2>
+    <p class="section-sub">Enter your domain below. We'll scan your site and email your report within minutes.</p>
+
+    <div class="checkout-card">
+        <div class="price-tag">£29.99 <span>one-off payment</span></div>
+        <div class="price-sub">Full compliance report delivered to your inbox — no subscription, no recurring fees.</div>
+
+        <div id="error-message" class="error-box" style="display:none;"></div>
+        <div id="success-message" class="success-box" style="display:none;"></div>
+
+        <div id="checkout-form">
+            {% csrf_token %}
+            <div class="field-group">
+                <label for="domain">Website Domain</label>
+                <input type="text" id="domain" placeholder="e.g. example.com" autocomplete="off">
+                <small>Enter your domain without https:// — e.g. mybusiness.co.uk</small>
+            </div>
+            <div class="field-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com">
+                <small>We'll send your report here within a few minutes of payment.</small>
+            </div>
+            <div class="field-group">
+                <label>Card Details</label>
+                <div id="card-element"></div>
+            </div>
+            <button id="submit-btn">
+                <span id="btn-text">Get My Report — £29.99</span>
+                <span id="btn-spinner" style="display:none;">Processing...</span>
+            </button>
+            <p class="secure-note">🔒 Payments secured by Stripe. We never store your card details.</p>
+        </div>
+    </div>
+</section>
+
 <script>const stripePublishableKey = '{{ stripe_publishable_key }}';</script>
 <script src="{% static 'js/checkout.js' %}"></script>
 {% endblock %}

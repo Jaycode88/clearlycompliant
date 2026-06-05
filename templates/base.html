@@ -4,20 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClearlyCompliant — GDPR Report</title>
+    <title>ClearlyCompliant — GDPR Compliance Reports for UK Businesses</title>
+    <meta name="description" content="Instant GDPR compliance reports for your website. 23 automated checks, AI-powered policy analysis, detailed PDF report — £29.99.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     {% block extra_css %}{% endblock %}
     <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <header>
-        <h1>ClearlyCompliant</h1>
+        <div class="logo">Clearly<span>Compliant</span></div>
+        <nav>
+            <a href="#what-is-included">What's Included</a>
+            <a href="#get-report">Get Your Report</a>
+            <a href="mailto:admin@clearlycompliant.co.uk">Contact</a>
+        </nav>
     </header>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    {% block content %}{% endblock %}
     <footer>
-        &copy; 2025 ClearlyCompliant. This report does not constitute legal advice.
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">Clearly<span>Compliant</span></div>
+                <p>Automated GDPR compliance reports<br>for UK businesses.</p>
+            </div>
+            <div class="footer-links">
+                <strong style="color:#ffffff; margin-bottom:4px;">Quick Links</strong>
+                <a href="#what-is-included">What's Included</a>
+                <a href="#get-report">Get Your Report</a>
+                <a href="mailto:admin@clearlycompliant.co.uk">Contact Us</a>
+            </div>
+            <div class="footer-links">
+                <strong style="color:#ffffff; margin-bottom:4px;">Legal</strong>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms & Conditions</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 ClearlyCompliant. All rights reserved. This service provides automated analysis only and does not constitute legal advice.
+        </div>
     </footer>
 </body>
 </html>
