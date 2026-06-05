@@ -1,3 +1,4 @@
+import time
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -67,6 +68,30 @@ CMS_SIGNATURES = {
     'Magento': ['mage/', 'Mage.Cookies'],
 }
 
+ECOMMERCE_SIGNATURES = {
+    'WooCommerce': ['woocommerce', 'wc-cart', 'wc_add_to_cart'],
+    'Shopify': ['cdn.shopify.com', 'shopify.com/s/'],
+    'Magento': ['mage/', 'Mage.Cookies'],
+    'BigCommerce': ['bigcommerce.com'],
+    'PrestaShop': ['prestashop'],
+    'OpenCart': ['opencart'],
+}
+
+ECOMMERCE_INDICATORS = [
+    'add to cart', 'add to basket', 'buy now', 'checkout',
+    'shopping cart', 'shopping basket', 'your cart', 'your basket',
+    'proceed to checkout', 'view cart', 'product', 'shop now',
+]
+
+SOCIAL_EMBED_SIGNATURES = {
+    'facebook': ['facebook.com/plugins', 'connect.facebook.net', 'fb-root', 'fb-page'],
+    'twitter': ['platform.twitter.com', 'twitter.com/widgets', 'twitter-timeline'],
+    'instagram': ['instagram.com/embed', 'instagram.com/p/'],
+    'youtube': ['youtube.com/embed', 'youtu.be', 'youtube-nocookie.com'],
+    'linkedin': ['linkedin.com/embed', 'platform.linkedin.com'],
+    'tiktok': ['tiktok.com/embed', 'tiktok.com/v/'],
+}
+
 COOKIE_BANNER_SIGNATURES = [
     'cookiebot',
     'cookieconsent',
@@ -124,12 +149,43 @@ DATA_SUBJECT_RIGHTS_KEYWORDS = [
 CONTACT_KEYWORDS = [
     'contact us',
     'get in touch',
+    'contact@',
+    'info@',
+    'hello@',
+    'support@',
+    'enquiries@',
+]
+
+PHONE_PATTERNS = [
+    r'\+44',
+    r'0\d{3,4}[\s\-]\d{3,4}[\s\-]\d{3,4}',
+    r'tel:',
+    r'telephone',
+    r'phone:',
+    r'call us',
+]
+
+ADDRESS_KEYWORDS = [
+    'ltd', 'limited', 'plc', 'llp',
+    'registered address',
+    'company number',
+    'companies house',
 ]
 
 DPO_KEYWORDS = [
     'data protection officer',
     'dpo@',
     'dpo ',
+]
+
+UNSUBSCRIBE_KEYWORDS = [
+    'unsubscribe',
+    'opt out',
+    'opt-out',
+    'manage preferences',
+    'email preferences',
+    'manage your subscription',
+    'cancel subscription',
 ]
 
 LOGIN_INDICATORS = [
@@ -174,6 +230,7 @@ def find_policy_url(soup, base_url, keywords):
 def fetch_policy_text(url):
     if not url:
         return ''
+    time.sleep(1)
     response = fetch_page(url)
     if not response:
         return ''
@@ -213,6 +270,8 @@ def scan_domain(domain):
         'has_contact_form': False,
         'has_newsletter_signup': False,
         'has_login': False,
+        'has_ecommerce': False,
+        'ecommerce_platform': '',
 
         # Section 5 - Third Party & Tracking
         'has_google_analytics': False,
@@ -225,6 +284,8 @@ def scan_domain(domain):
         'payment_processors_found': [],
         'has_cdn': False,
         'cdn_found': [],
+        'has_social_embeds': False,
+        'social_embeds_found': [],
         'cms_detected': '',
 
         # Section 6 - User Rights
@@ -333,11 +394,24 @@ def scan_domain(domain):
             if 'password' in input_types:
                 results['has_login'] = True
 
-        # Also check for login links/references in page text and HTML
         for indicator in LOGIN_INDICATORS:
             if indicator in all_html_lower:
                 results['has_login'] = True
                 break
+
+        # Ecommerce detection
+        for platform, sigs in ECOMMERCE_SIGNATURES.items():
+            for sig in sigs:
+                if sig in all_html_lower:
+                    results['has_ecommerce'] = True
+                    results['ecommerce_platform'] = platform
+                    break
+            if results['has_ecommerce']:
+                break
+
+        if not results['has_ecommerce']:
+            if any(k in text for k in ECOMMERCE_INDICATORS):
+                results['has_ecommerce'] = True
 
         # --- Section 5: Third Party & Tracking ---
         scripts = [s.get('src', '') for s in soup.find_all('script', src=True)]
@@ -397,6 +471,17 @@ def scan_domain(domain):
             results['has_cdn'] = True
             results['cdn_found'] = cdn_found
 
+        social_found = []
+        for platform, sigs in SOCIAL_EMBED_SIGNATURES.items():
+            for sig in sigs:
+                if sig in all_html_lower:
+                    if platform not in social_found:
+                        social_found.append(platform)
+                    break
+        if social_found:
+            results['has_social_embeds'] = True
+            results['social_embeds_found'] = social_found
+
         for cms, sigs in CMS_SIGNATURES.items():
             for sig in sigs:
                 if sig in all_html_lower:
@@ -406,11 +491,22 @@ def scan_domain(domain):
                 break
 
         # --- Section 6: User Rights ---
-        if 'unsubscribe' in text or 'opt out' in text or 'opt-out' in text:
+        import re
+        full_text = text + ' ' + results['privacy_policy_text'].lower()
+
+        if any(k in full_text for k in UNSUBSCRIBE_KEYWORDS):
             results['has_unsubscribe_mechanism'] = True
 
         if any(k in text for k in CONTACT_KEYWORDS):
             results['has_contact_info'] = True
+        else:
+            for pattern in PHONE_PATTERNS:
+                if re.search(pattern, text):
+                    results['has_contact_info'] = True
+                    break
+        if not results['has_contact_info']:
+            if any(k in text for k in ADDRESS_KEYWORDS):
+                results['has_contact_info'] = True
 
         if any(k in text for k in DPO_KEYWORDS):
             results['has_dpo_info'] = True

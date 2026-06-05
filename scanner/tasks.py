@@ -53,6 +53,10 @@ def run_scan(order_id):
             has_contact_info=results['has_contact_info'],
             has_dpo_info=results['has_dpo_info'],
             has_data_subject_rights=results['has_data_subject_rights'],
+            has_ecommerce=results['has_ecommerce'],
+            ecommerce_platform=results['ecommerce_platform'],
+            has_social_embeds=results['has_social_embeds'],
+            social_embeds_found=results['social_embeds_found'],
             raw_html=results['raw_html'],
             error=results['error'],
         )

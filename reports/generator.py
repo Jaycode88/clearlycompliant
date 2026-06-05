@@ -14,6 +14,7 @@ PASS_BG = HexColor('#f0fdf4')
 FAIL_ORANGE = HexColor('#c2410c')
 FAIL_BG = HexColor('#fff7ed')
 INFO_BG = HexColor('#f8f8ff')
+INFO_BLUE_BG = HexColor('#eff6ff')
 GREY = HexColor('#666666')
 LIGHT_GREY = HexColor('#e5e7eb')
 DARK = HexColor('#1a1a2e')
@@ -99,33 +100,7 @@ def generate_report(order, scan_result):
     ))
     elements.append(HRFlowable(width='100%', thickness=3, color=BRAND_PURPLE, spaceAfter=6*mm))
 
-    # --- Site Overview ---
-    elements.append(section_heading('Site Overview'))
-    elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY, spaceAfter=3*mm))
-
-    overview_items = []
-    if scan_result.cms_detected:
-        overview_items.append(make_info_row('CMS / Platform', scan_result.cms_detected))
-    if scan_result.payment_processors_found:
-        overview_items.append(make_info_row('Payment Processors', ', '.join(scan_result.payment_processors_found).title()))
-    if scan_result.cdn_found:
-        overview_items.append(make_info_row('CDN', ', '.join(scan_result.cdn_found).title()))
-    if scan_result.live_chat_tools_found:
-        overview_items.append(make_info_row('Live Chat', ', '.join(scan_result.live_chat_tools_found).title()))
-
-    if overview_items:
-        for item in overview_items:
-            elements.append(item)
-            elements.append(Spacer(1, 2*mm))
-    else:
-        elements.append(Paragraph(
-            '<font color="#666666">No platform or third-party services detected.</font>',
-            ParagraphStyle('noitems', fontSize=10, leading=15)
-        ))
-
-    elements.append(Spacer(1, 4*mm))
-
-    # Build all checks grouped by section
+    # Build sections first so we can calculate scores
     sections = [
         {
             'title': '1. Technical Security',
@@ -152,7 +127,7 @@ def generate_report(order, scan_result):
                     'Content Security Policy Header',
                     scan_result.has_content_security_policy,
                     'Content Security Policy header is set, helping prevent cross-site scripting attacks.',
-                    'Content Security Policy (CSP) header is missing. This increases the risk of cross-site scripting (XSS) attacks that could compromise user data.',
+                    'Content Security Policy (CSP) header is missing. This increases the risk of XSS attacks that could compromise user data.',
                 ),
                 (
                     'X-Content-Type-Options Header',
@@ -163,8 +138,8 @@ def generate_report(order, scan_result):
                 (
                     'Referrer-Policy Header',
                     scan_result.has_referrer_policy,
-                    'Referrer-Policy header is set, controlling what data is shared when users navigate away from your site.',
-                    'Referrer-Policy header is missing. Without this, full URLs (potentially containing personal data) may be shared with third-party sites when users click links.',
+                    'Referrer-Policy header is set, controlling what data is shared when users navigate away.',
+                    'Referrer-Policy header is missing. Full URLs containing personal data may be shared with third-party sites when users click links.',
                 ),
             ]
         },
@@ -187,7 +162,7 @@ def generate_report(order, scan_result):
                     'Terms & Conditions Present',
                     scan_result.has_terms_and_conditions,
                     'Terms and conditions were detected on your site.',
-                    'No terms and conditions were detected. While not strictly required by GDPR, T&Cs are important for defining the legal relationship with your users.',
+                    'No terms and conditions were detected. T&Cs are important for defining the legal relationship with your users.',
                 ),
                 (
                     'Data Retention Policy Mentioned',
@@ -210,7 +185,7 @@ def generate_report(order, scan_result):
                     'Cookie Preferences Link',
                     scan_result.has_cookie_preferences_link,
                     'A cookie settings or preferences link was found, allowing users to manage their consent.',
-                    'No cookie preferences or settings link was found. Users should be able to easily manage or withdraw their cookie consent.',
+                    'No cookie preferences link was found. Users should be able to easily manage or withdraw their cookie consent.',
                 ),
                 (
                     'Form Consent Checkbox',
@@ -239,7 +214,13 @@ def generate_report(order, scan_result):
                     'Login / Account System',
                     not scan_result.has_login,
                     'No login or account system detected.',
-                    'A login or account system was detected. Ensure your privacy policy covers account data, and that you have appropriate security measures in place.',
+                    'A login or account system was detected. Ensure your privacy policy covers account data and that appropriate security measures are in place.',
+                ),
+                (
+                    'Ecommerce',
+                    not scan_result.has_ecommerce,
+                    'No ecommerce functionality detected.',
+                    f'Ecommerce functionality was detected{(" (" + scan_result.ecommerce_platform + ")") if scan_result.ecommerce_platform else ""}. Ensure your privacy policy covers payment data handling and that you comply with PCI DSS requirements.',
                 ),
             ]
         },
@@ -279,19 +260,19 @@ def generate_report(order, scan_result):
                     'Data Protection Officer (DPO) Information',
                     scan_result.has_dpo_info,
                     'DPO information was found on your site.',
-                    'No Data Protection Officer information was found. Depending on your processing activities, you may be required to appoint and publish DPO contact details.',
+                    'No DPO information was found. Depending on your processing activities, you may be required to appoint and publish DPO contact details.',
                 ),
                 (
                     'Data Subject Rights Mentioned',
                     scan_result.has_data_subject_rights,
                     'Data subject rights are referenced in your privacy policy.',
-                    'No mention of data subject rights was found. GDPR requires you to inform users of their rights, including access, erasure, and portability.',
+                    'No mention of data subject rights was found. GDPR requires you to inform users of their rights including access, erasure, and portability.',
                 ),
             ]
         },
     ]
 
-    # Add other trackers and live chat as dynamic checks
+    # Add dynamic checks for other trackers
     if scan_result.has_other_trackers:
         for tracker in scan_result.other_trackers_found:
             sections[4]['checks'].append((
@@ -301,11 +282,21 @@ def generate_report(order, scan_result):
                 f'{tracker.title()} tracking was detected. Ensure this is disclosed in your privacy policy and covered by your cookie consent.',
             ))
 
-    # Calculate score
+    # Add dynamic checks for social embeds
+    if scan_result.has_social_embeds:
+        for platform in scan_result.social_embeds_found:
+            sections[4]['checks'].append((
+                f'Social embed: {platform.title()}',
+                False,
+                '',
+                f'{platform.title()} embed detected. Social media embeds can transfer user data to third parties — ensure this is covered in your privacy policy and cookie consent.',
+            ))
+
+    # Calculate overall score
     all_checks = [c for s in sections for c in s['checks']]
-    passed = sum(1 for c in all_checks if c[1])
-    total = len(all_checks)
-    score = int((passed / total) * 100)
+    total_passed = sum(1 for c in all_checks if c[1])
+    total_checks = len(all_checks)
+    score = int((total_passed / total_checks) * 100)
 
     if score >= 80:
         rating = 'Good'
@@ -321,9 +312,11 @@ def generate_report(order, scan_result):
     score_data = [[
         Paragraph(f'<font color="{rating_colour.hexval()}"><b>{score}%</b></font>',
                   ParagraphStyle('score', fontSize=36, leading=40)),
-        Paragraph(f'<font color="{rating_colour.hexval()}"><b>{rating}</b></font><br/>'
-                  f'<font color="#666666">{passed} of {total} checks passed</font>',
-                  ParagraphStyle('rating', fontSize=16, leading=24)),
+        Paragraph(
+            f'<font color="{rating_colour.hexval()}"><b>{rating}</b></font><br/>'
+            f'<font color="#666666">{total_passed} of {total_checks} checks passed</font>',
+            ParagraphStyle('rating', fontSize=16, leading=24)
+        ),
     ]]
     score_table = Table(score_data, colWidths=[40*mm, 130*mm])
     score_table.setStyle(TableStyle([
@@ -334,11 +327,87 @@ def generate_report(order, scan_result):
         ('TOPPADDING', (0, 0), (-1, -1), 10),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
     ]))
-    elements.insert(6, Spacer(1, 4*mm))
-    elements.insert(7, score_table)
-    elements.insert(8, Spacer(1, 6*mm))
+    elements.append(score_table)
+    elements.append(Spacer(1, 6*mm))
 
-    # --- Sections ---
+    # --- Section Summary Table ---
+    elements.append(section_heading('Summary'))
+    elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY, spaceAfter=3*mm))
+
+    summary_data = [
+        [
+            Paragraph('<b>Section</b>', ParagraphStyle('sh', fontSize=10, leading=14)),
+            Paragraph('<b>Passed</b>', ParagraphStyle('sh', fontSize=10, leading=14)),
+            Paragraph('<b>Failed</b>', ParagraphStyle('sh', fontSize=10, leading=14)),
+            Paragraph('<b>Score</b>', ParagraphStyle('sh', fontSize=10, leading=14)),
+        ]
+    ]
+
+    for section in sections:
+        s_checks = section['checks']
+        s_passed = sum(1 for c in s_checks if c[1])
+        s_total = len(s_checks)
+        s_score = int((s_passed / s_total) * 100)
+        s_failed = s_total - s_passed
+
+        if s_score >= 80:
+            s_colour = '#22c55e'
+        elif s_score >= 50:
+            s_colour = '#f59e0b'
+        else:
+            s_colour = '#ef4444'
+
+        summary_data.append([
+            Paragraph(section['title'], ParagraphStyle('sc', fontSize=10, leading=14)),
+            Paragraph(f'<font color="#15803d"><b>{s_passed}</b></font>', ParagraphStyle('sc', fontSize=10, leading=14)),
+            Paragraph(f'<font color="#c2410c"><b>{s_failed}</b></font>', ParagraphStyle('sc', fontSize=10, leading=14)),
+            Paragraph(f'<font color="{s_colour}"><b>{s_score}%</b></font>', ParagraphStyle('sc', fontSize=10, leading=14)),
+        ])
+
+    summary_table = Table(summary_data, colWidths=[100*mm, 25*mm, 25*mm, 25*mm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), BRAND_PURPLE),
+        ('TEXTCOLOR', (0, 0), (-1, 0), white),
+        ('BACKGROUND', (0, 1), (-1, -1), INFO_BG),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [INFO_BG, HexColor('#f0f0ff')]),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.5, LIGHT_GREY),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 6*mm))
+
+    # --- Site Overview ---
+    overview_items = []
+    if scan_result.cms_detected:
+        overview_items.append(('CMS / Platform', scan_result.cms_detected))
+    if scan_result.ecommerce_platform:
+        overview_items.append(('Ecommerce Platform', scan_result.ecommerce_platform))
+    elif scan_result.has_ecommerce:
+        overview_items.append(('Ecommerce', 'Detected'))
+    if scan_result.payment_processors_found:
+        overview_items.append(('Payment Processors', ', '.join(scan_result.payment_processors_found).title()))
+    if scan_result.cdn_found:
+        overview_items.append(('CDN', ', '.join(scan_result.cdn_found).title()))
+    if scan_result.live_chat_tools_found:
+        overview_items.append(('Live Chat', ', '.join(scan_result.live_chat_tools_found).title()))
+    if scan_result.social_embeds_found:
+        overview_items.append(('Social Embeds', ', '.join(scan_result.social_embeds_found).title()))
+    if scan_result.other_trackers_found:
+        overview_items.append(('Other Trackers', ', '.join(scan_result.other_trackers_found).title()))
+
+    if overview_items:
+        elements.append(section_heading('Site Overview'))
+        elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY, spaceAfter=3*mm))
+        for label, value in overview_items:
+            elements.append(make_info_row(label, value))
+            elements.append(Spacer(1, 2*mm))
+        elements.append(Spacer(1, 4*mm))
+
+    # --- Detailed Sections ---
     for section in sections:
         elements.append(section_heading(section['title']))
         elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY, spaceAfter=3*mm))

@@ -32,6 +32,8 @@ class ScanResult(models.Model):
     has_contact_form = models.BooleanField(default=False)
     has_newsletter_signup = models.BooleanField(default=False)
     has_login = models.BooleanField(default=False)
+    has_ecommerce = models.BooleanField(default=False)
+    ecommerce_platform = models.CharField(max_length=100, blank=True)
 
     # Section 5 - Third Party & Tracking
     has_google_analytics = models.BooleanField(default=False)
@@ -44,6 +46,8 @@ class ScanResult(models.Model):
     payment_processors_found = models.JSONField(default=list)
     has_cdn = models.BooleanField(default=False)
     cdn_found = models.JSONField(default=list)
+    has_social_embeds = models.BooleanField(default=False)
+    social_embeds_found = models.JSONField(default=list)
     cms_detected = models.CharField(max_length=100, blank=True)
 
     # Section 6 - User Rights
