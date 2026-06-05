@@ -94,7 +94,15 @@ async function handleSubmit() {
         successDiv.style.display = 'block';
 
     } catch (err) {
-        errorDiv.textContent = err.message;
+        let message = err.message;
+        if (message.includes('card was declined')) {
+            message = 'Your card was declined. Please check your details or try a different card.';
+        } else if (message.includes('insufficient funds')) {
+            message = 'Your card has insufficient funds. Please try a different card.';
+        } else if (message.includes('expired')) {
+            message = 'Your card has expired. Please try a different card.';
+        }
+        errorDiv.textContent = message;
         errorDiv.style.display = 'block';
         btn.disabled = false;
         btnText.style.display = 'inline';

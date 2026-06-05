@@ -39,8 +39,17 @@ def run_scan(order_id):
             logger.error(f'Scan error for {order.domain}: {results["error"]}')
             order.status = Order.Status.FAILED
             order.save()
+            from mailer.tasks import send_failure_email
+            send_failure_email(str(order.id), results['error'])
 
     except Order.DoesNotExist:
         logger.error(f'Order {order_id} not found')
     except Exception as e:
         logger.error(f'Unexpected error in run_scan for {order_id}: {e}')
+        try:
+            order.status = Order.Status.FAILED
+            order.save()
+            from mailer.tasks import send_failure_email
+            send_failure_email(str(order.id), str(e))
+        except Exception:
+            pass

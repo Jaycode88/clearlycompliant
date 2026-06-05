@@ -58,3 +58,33 @@ The ClearlyCompliant Team
         logger.error(f'Order or Report not found: {e}')
     except Exception as e:
         logger.error(f'Failed to send email for order {order_id}: {type(e).__name__}: {e}')
+
+
+def send_failure_email(order_id, error_message):
+    try:
+        order = Order.objects.get(id=order_id)
+        logger.info(f'Sending failure email to {order.email}')
+
+        email = EmailMessage(
+            subject=f'Issue with your ClearlyCompliant report — {order.domain}',
+            body=f"""Hi,
+
+We're sorry, but we encountered an issue while scanning {order.domain}:
+
+{error_message}
+
+Please reply to this email and we'll look into it and either resolve the issue or arrange a full refund.
+
+Apologies for the inconvenience.
+
+The ClearlyCompliant Team
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[order.email],
+        )
+
+        email.send()
+        logger.info(f'Failure email sent to {order.email}')
+
+    except Exception as e:
+        logger.error(f'Failed to send failure email for order {order_id}: {e}')

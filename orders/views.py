@@ -1,4 +1,5 @@
 import json
+import re
 import stripe
 import threading
 from django.conf import settings
@@ -13,7 +14,15 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 REPORT_PRICE_PENCE = 2999  # £29.99
 
 
+def is_valid_domain(domain):
+    domain = domain.strip().lower()
+    domain = re.sub(r'^https?://', '', domain)
+    pattern = r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+    return bool(re.match(pattern, domain))
+
+
 def run_scan_sync(order_id):
+    print(f'>>> run_scan_sync started for {order_id}')
     from scanner.tasks import run_scan
     run_scan(order_id)
 
@@ -27,6 +36,12 @@ def create_payment_intent(request):
 
         if not domain or not email:
             return JsonResponse({'error': 'Domain and email are required.'}, status=400)
+
+        if not is_valid_domain(domain):
+            return JsonResponse({'error': 'Please enter a valid domain name, e.g. example.com'}, status=400)
+
+        # Normalise — strip scheme
+        domain = re.sub(r'^https?://', '', domain).strip('/')
 
         order = Order.objects.create(domain=domain, email=email)
 
@@ -51,10 +66,6 @@ def create_payment_intent(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
-def run_scan_sync(order_id):
-    from scanner.tasks import run_scan
-    run_scan(order_id)
 
 @csrf_exempt
 @require_POST

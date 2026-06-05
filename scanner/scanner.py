@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
 
 
 TRACKER_SIGNATURES = {
@@ -81,6 +80,7 @@ def scan_domain(domain):
         'has_contact_info': False,
         'raw_html': '',
         'error': '',
+        'error_type': '',
     }
 
     try:
@@ -90,8 +90,10 @@ def scan_domain(domain):
             headers={'User-Agent': 'ClearlyCompliant GDPR Scanner/1.0'},
             allow_redirects=True,
         )
+        response.raise_for_status()
+
         html = response.text
-        results['raw_html'] = html[:50000]  # cap storage at 50k chars
+        results['raw_html'] = html[:50000]
         results['is_https'] = response.url.startswith('https://')
 
         soup = BeautifulSoup(html, 'html.parser')
@@ -146,7 +148,20 @@ def scan_domain(domain):
                 results['has_contact_info'] = True
                 break
 
-    except requests.exceptions.RequestException as e:
-        results['error'] = str(e)
+    except requests.exceptions.ConnectionError:
+        results['error'] = f'Could not connect to {domain}. The domain may not exist or is currently unreachable.'
+        results['error_type'] = 'connection_error'
+    except requests.exceptions.Timeout:
+        results['error'] = f'Connection to {domain} timed out after 15 seconds.'
+        results['error_type'] = 'timeout'
+    except requests.exceptions.TooManyRedirects:
+        results['error'] = f'{domain} has too many redirects and could not be scanned.'
+        results['error_type'] = 'redirect_error'
+    except requests.exceptions.HTTPError as e:
+        results['error'] = f'{domain} returned an error: {e.response.status_code}.'
+        results['error_type'] = 'http_error'
+    except Exception as e:
+        results['error'] = f'An unexpected error occurred while scanning {domain}.'
+        results['error_type'] = 'unknown'
 
     return results
