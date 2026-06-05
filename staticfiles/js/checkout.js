@@ -13,6 +13,32 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function getUtmParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        utm_source: params.get('utm_source') || sessionStorage.getItem('utm_source') || '',
+        utm_medium: params.get('utm_medium') || sessionStorage.getItem('utm_medium') || '',
+        utm_campaign: params.get('utm_campaign') || sessionStorage.getItem('utm_campaign') || '',
+        utm_term: params.get('utm_term') || sessionStorage.getItem('utm_term') || '',
+        utm_content: params.get('utm_content') || sessionStorage.getItem('utm_content') || '',
+        referrer: sessionStorage.getItem('referrer') || document.referrer || '',
+    };
+}
+
+// Store UTM params in sessionStorage on page load so they persist
+// even if the user scrolls down and the URL params are no longer visible
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('utm_source')) sessionStorage.setItem('utm_source', params.get('utm_source'));
+    if (params.get('utm_medium')) sessionStorage.setItem('utm_medium', params.get('utm_medium'));
+    if (params.get('utm_campaign')) sessionStorage.setItem('utm_campaign', params.get('utm_campaign'));
+    if (params.get('utm_term')) sessionStorage.setItem('utm_term', params.get('utm_term'));
+    if (params.get('utm_content')) sessionStorage.setItem('utm_content', params.get('utm_content'));
+    if (document.referrer && !sessionStorage.getItem('referrer')) {
+        sessionStorage.setItem('referrer', document.referrer);
+    }
+})();
+
 const stripe = Stripe(stripePublishableKey);
 const elements = stripe.elements();
 
@@ -23,7 +49,8 @@ const cardElement = elements.create('card', {
             color: '#1a1a2e',
             '::placeholder': { color: '#9ca3af' },
         }
-    }
+    },
+    hidePostalCode: true,
 });
 cardElement.mount('#card-element');
 
@@ -60,13 +87,19 @@ async function handleSubmit() {
     btnSpinner.style.display = 'inline';
 
     try {
+        const utmParams = getUtmParams();
+
         const response = await fetch('/orders/create-payment-intent/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken'),
             },
-            body: JSON.stringify({ domain, email }),
+            body: JSON.stringify({
+                domain,
+                email,
+                ...utmParams,
+            }),
         });
 
         const data = await response.json();
@@ -83,7 +116,17 @@ async function handleSubmit() {
             }
         );
 
-        if (error) throw new Error(error.message);
+        if (error) {
+            let message = error.message;
+            if (message.includes('card was declined')) {
+                message = 'Your card was declined. Please check your details or try a different card.';
+            } else if (message.includes('insufficient funds')) {
+                message = 'Your card has insufficient funds. Please try a different card.';
+            } else if (message.includes('expired')) {
+                message = 'Your card has expired. Please try a different card.';
+            }
+            throw new Error(message);
+        }
 
         document.getElementById('checkout-form').style.display = 'none';
         successDiv.innerHTML = `
@@ -94,15 +137,7 @@ async function handleSubmit() {
         successDiv.style.display = 'block';
 
     } catch (err) {
-        let message = err.message;
-        if (message.includes('card was declined')) {
-            message = 'Your card was declined. Please check your details or try a different card.';
-        } else if (message.includes('insufficient funds')) {
-            message = 'Your card has insufficient funds. Please try a different card.';
-        } else if (message.includes('expired')) {
-            message = 'Your card has expired. Please try a different card.';
-        }
-        errorDiv.textContent = message;
+        errorDiv.textContent = err.message;
         errorDiv.style.display = 'block';
         btn.disabled = false;
         btnText.style.display = 'inline';
