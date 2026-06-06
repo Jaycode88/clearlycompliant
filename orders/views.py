@@ -27,6 +27,32 @@ def run_scan_sync(order_id):
     run_scan(order_id)
 
 
+def get_coupon_from_promo(promo):
+    """Extract and retrieve the coupon from a promotion code object."""
+    try:
+        promotion = getattr(promo, 'promotion', None)
+        print(f'>>> promotion: {promotion}')
+        if promotion:
+            coupon_id = getattr(promotion, 'coupon', None)
+            print(f'>>> coupon_id: {coupon_id}')
+            if coupon_id:
+                coupon = stripe.Coupon.retrieve(coupon_id)
+                print(f'>>> retrieved coupon: {coupon}')
+                return coupon
+    except Exception as e:
+        print(f'>>> promotion path error: {e}')
+    try:
+        coupon = getattr(promo, 'coupon', None)
+        print(f'>>> direct coupon: {coupon}')
+        if coupon:
+            if isinstance(coupon, str):
+                return stripe.Coupon.retrieve(coupon)
+            return coupon
+    except Exception as e:
+        print(f'>>> direct coupon error: {e}')
+    return None
+
+
 @require_POST
 def validate_discount_code(request):
     try:
@@ -36,35 +62,40 @@ def validate_discount_code(request):
         if not code:
             return JsonResponse({'valid': False, 'error': 'Please enter a discount code.'})
 
-        # Validate against Stripe
         promotion_codes = stripe.PromotionCode.list(code=code, active=True, limit=1)
 
         if not promotion_codes.data:
             return JsonResponse({'valid': False, 'error': 'Invalid or expired discount code.'})
 
         promo = promotion_codes.data[0]
-        coupon = promo.coupon
+        coupon = get_coupon_from_promo(promo)
 
-        # Calculate discounted price
-        if coupon.percent_off:
-            discount_pence = int(REPORT_PRICE_PENCE * coupon.percent_off / 100)
+        if not coupon:
+            return JsonResponse({'valid': False, 'error': 'Invalid discount code.'})
+
+        percent_off = getattr(coupon, 'percent_off', None)
+        amount_off = getattr(coupon, 'amount_off', None)
+
+        if percent_off:
+            discount_pence = int(REPORT_PRICE_PENCE * percent_off / 100)
             final_price = REPORT_PRICE_PENCE - discount_pence
-            discount_label = f'{int(coupon.percent_off)}% off'
-        elif coupon.amount_off:
-            final_price = max(0, REPORT_PRICE_PENCE - coupon.amount_off)
-            discount_label = f'£{coupon.amount_off / 100:.2f} off'
+            discount_label = f'{int(percent_off)}% off'
+        elif amount_off:
+            final_price = max(0, REPORT_PRICE_PENCE - amount_off)
+            discount_label = f'£{amount_off / 100:.2f} off'
         else:
             return JsonResponse({'valid': False, 'error': 'Invalid discount code.'})
 
         return JsonResponse({
             'valid': True,
-            'promo_code_id': promo.id,
+            'promo_code_id': promo['id'],
             'final_price': final_price,
             'final_price_display': f'£{final_price / 100:.2f}',
             'discount_label': discount_label,
         })
 
     except Exception as e:
+        print(f'>>> Discount validation error: {type(e).__name__}: {e}')
         return JsonResponse({'valid': False, 'error': 'Could not validate code. Please try again.'})
 
 
@@ -84,21 +115,23 @@ def create_payment_intent(request):
 
         domain = re.sub(r'^https?://', '', domain).strip('/')
 
-        # Calculate final price
         amount = REPORT_PRICE_PENCE
         discount_code = ''
 
         if promo_code_id:
             try:
                 promo = stripe.PromotionCode.retrieve(promo_code_id)
-                coupon = promo.coupon
-                discount_code = promo.code
-                if coupon.percent_off:
-                    amount = int(REPORT_PRICE_PENCE * (1 - coupon.percent_off / 100))
-                elif coupon.amount_off:
-                    amount = max(0, REPORT_PRICE_PENCE - coupon.amount_off)
-            except Exception:
-                pass
+                discount_code = promo['code']
+                coupon = get_coupon_from_promo(promo)
+                if coupon:
+                    percent_off = getattr(coupon, 'percent_off', None)
+                    amount_off = getattr(coupon, 'amount_off', None)
+                    if percent_off:
+                        amount = int(REPORT_PRICE_PENCE * (1 - percent_off / 100))
+                    elif amount_off:
+                        amount = max(0, REPORT_PRICE_PENCE - amount_off)
+            except Exception as e:
+                print(f'>>> Promo retrieval error: {e}')
 
         order = Order.objects.create(
             domain=domain,
@@ -113,20 +146,27 @@ def create_payment_intent(request):
             amount_paid=amount,
         )
 
-        intent_params = {
-            'amount': amount,
-            'currency': 'gbp',
-            'metadata': {
+        # If 100% discount, skip payment entirely
+        if amount == 0:
+            order.status = Order.Status.PAID
+            order.save()
+            thread = threading.Thread(target=run_scan_sync, args=(str(order.id),))
+            thread.daemon = True
+            thread.start()
+            return JsonResponse({
+                'free': True,
+                'order_id': str(order.id),
+            })
+
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='gbp',
+            metadata={
                 'order_id': str(order.id),
                 'domain': domain,
                 'email': email,
             }
-        }
-
-        if promo_code_id:
-            intent_params['discounts'] = [{'promotion_code': promo_code_id}]
-
-        intent = stripe.PaymentIntent.create(**intent_params)
+        )
 
         order.stripe_payment_intent_id = intent.id
         order.save()

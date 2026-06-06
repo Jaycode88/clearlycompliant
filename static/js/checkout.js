@@ -99,8 +99,13 @@ async function applyDiscount() {
             msgDiv.textContent = `✓ Code applied — ${data.discount_label}`;
             msgDiv.style.color = '#15803d';
             msgDiv.style.display = 'block';
-            priceDisplay.innerHTML = `${data.final_price_display} <span>one-off payment</span> <span style="text-decoration:line-through; color:#9ca3af; font-size:18px;">£29.99</span>`;
-            document.getElementById('btn-text').textContent = `Get My Report — ${data.final_price_display}`;
+            if (finalPrice === 0) {
+                priceDisplay.innerHTML = `£0.00 <span>one-off payment</span> <span style="text-decoration:line-through; color:#9ca3af; font-size:18px;">£29.99</span>`;
+                document.getElementById('btn-text').textContent = 'Get My Free Report';
+            } else {
+                priceDisplay.innerHTML = `${data.final_price_display} <span>one-off payment</span> <span style="text-decoration:line-through; color:#9ca3af; font-size:18px;">£29.99</span>`;
+                document.getElementById('btn-text').textContent = `Get My Report — ${data.final_price_display}`;
+            }
         } else {
             appliedPromoCodeId = '';
             finalPrice = 2999;
@@ -162,6 +167,18 @@ async function handleSubmit() {
         const data = await response.json();
 
         if (data.error) throw new Error(data.error);
+
+        // Handle free order (100% discount)
+        if (data.free) {
+            document.getElementById('checkout-form').style.display = 'none';
+            successDiv.innerHTML = `
+                <strong>Order confirmed!</strong><br>
+                We're now scanning <strong>${domain}</strong>.<br>
+                Your report will be emailed to <strong>${email}</strong> within a few minutes.
+            `;
+            successDiv.style.display = 'block';
+            return;
+        }
 
         const { error, paymentIntent } = await stripe.confirmCardPayment(
             data.client_secret,
