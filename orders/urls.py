@@ -7,4 +7,5 @@ urlpatterns = [
     path('', views.checkout, name='checkout'),
     path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
     path('terms-and-conditions/', views.terms_and_conditions, name='terms_and_conditions'),
+    path('validate-discount/', views.validate_discount_code, name='validate_discount'),
 ]

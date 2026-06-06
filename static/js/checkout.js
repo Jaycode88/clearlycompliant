@@ -25,8 +25,6 @@ function getUtmParams() {
     };
 }
 
-// Store UTM params in sessionStorage on page load so they persist
-// even if the user scrolls down and the URL params are no longer visible
 (function() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('utm_source')) sessionStorage.setItem('utm_source', params.get('utm_source'));
@@ -64,6 +62,64 @@ cardElement.on('change', function(event) {
     }
 });
 
+let appliedPromoCodeId = '';
+let finalPrice = 2999;
+
+async function applyDiscount() {
+    const code = document.getElementById('discount-code').value.trim().toUpperCase();
+    const msgDiv = document.getElementById('discount-message');
+    const applyBtn = document.getElementById('apply-btn');
+    const priceDisplay = document.getElementById('price-display');
+
+    if (!code) {
+        msgDiv.textContent = 'Please enter a discount code.';
+        msgDiv.style.color = '#c2410c';
+        msgDiv.style.display = 'block';
+        return;
+    }
+
+    applyBtn.disabled = true;
+    applyBtn.textContent = 'Checking...';
+
+    try {
+        const response = await fetch('/orders/validate-discount/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({ code }),
+        });
+
+        const data = await response.json();
+
+        if (data.valid) {
+            appliedPromoCodeId = data.promo_code_id;
+            finalPrice = data.final_price;
+            msgDiv.textContent = `✓ Code applied — ${data.discount_label}`;
+            msgDiv.style.color = '#15803d';
+            msgDiv.style.display = 'block';
+            priceDisplay.innerHTML = `${data.final_price_display} <span>one-off payment</span> <span style="text-decoration:line-through; color:#9ca3af; font-size:18px;">£29.99</span>`;
+            document.getElementById('btn-text').textContent = `Get My Report — ${data.final_price_display}`;
+        } else {
+            appliedPromoCodeId = '';
+            finalPrice = 2999;
+            msgDiv.textContent = data.error;
+            msgDiv.style.color = '#c2410c';
+            msgDiv.style.display = 'block';
+            priceDisplay.innerHTML = '£29.99 <span>one-off payment</span>';
+            document.getElementById('btn-text').textContent = 'Get My Report — £29.99';
+        }
+    } catch (err) {
+        msgDiv.textContent = 'Could not validate code. Please try again.';
+        msgDiv.style.color = '#c2410c';
+        msgDiv.style.display = 'block';
+    }
+
+    applyBtn.disabled = false;
+    applyBtn.textContent = 'Apply';
+}
+
 async function handleSubmit() {
     const domain = document.getElementById('domain').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -98,6 +154,7 @@ async function handleSubmit() {
             body: JSON.stringify({
                 domain,
                 email,
+                promo_code_id: appliedPromoCodeId,
                 ...utmParams,
             }),
         });

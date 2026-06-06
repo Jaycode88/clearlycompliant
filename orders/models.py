@@ -27,5 +27,8 @@ class Order(models.Model):
     utm_content = models.CharField(max_length=200, blank=True)
     referrer = models.URLField(max_length=500, blank=True)
 
+    discount_code = models.CharField(max_length=100, blank=True)
+    amount_paid = models.IntegerField(default=2999)  # in pence
+
     def __str__(self):
         return f"{self.domain} — {self.status}"

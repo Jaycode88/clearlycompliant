@@ -28,11 +28,53 @@ def run_scan_sync(order_id):
 
 
 @require_POST
+def validate_discount_code(request):
+    try:
+        data = json.loads(request.body)
+        code = data.get('code', '').strip()
+
+        if not code:
+            return JsonResponse({'valid': False, 'error': 'Please enter a discount code.'})
+
+        # Validate against Stripe
+        promotion_codes = stripe.PromotionCode.list(code=code, active=True, limit=1)
+
+        if not promotion_codes.data:
+            return JsonResponse({'valid': False, 'error': 'Invalid or expired discount code.'})
+
+        promo = promotion_codes.data[0]
+        coupon = promo.coupon
+
+        # Calculate discounted price
+        if coupon.percent_off:
+            discount_pence = int(REPORT_PRICE_PENCE * coupon.percent_off / 100)
+            final_price = REPORT_PRICE_PENCE - discount_pence
+            discount_label = f'{int(coupon.percent_off)}% off'
+        elif coupon.amount_off:
+            final_price = max(0, REPORT_PRICE_PENCE - coupon.amount_off)
+            discount_label = f'£{coupon.amount_off / 100:.2f} off'
+        else:
+            return JsonResponse({'valid': False, 'error': 'Invalid discount code.'})
+
+        return JsonResponse({
+            'valid': True,
+            'promo_code_id': promo.id,
+            'final_price': final_price,
+            'final_price_display': f'£{final_price / 100:.2f}',
+            'discount_label': discount_label,
+        })
+
+    except Exception as e:
+        return JsonResponse({'valid': False, 'error': 'Could not validate code. Please try again.'})
+
+
+@require_POST
 def create_payment_intent(request):
     try:
         data = json.loads(request.body)
         domain = data.get('domain', '').strip()
         email = data.get('email', '').strip()
+        promo_code_id = data.get('promo_code_id', '').strip()
 
         if not domain or not email:
             return JsonResponse({'error': 'Domain and email are required.'}, status=400)
@@ -40,8 +82,23 @@ def create_payment_intent(request):
         if not is_valid_domain(domain):
             return JsonResponse({'error': 'Please enter a valid domain name, e.g. example.com'}, status=400)
 
-        # Normalise — strip scheme
         domain = re.sub(r'^https?://', '', domain).strip('/')
+
+        # Calculate final price
+        amount = REPORT_PRICE_PENCE
+        discount_code = ''
+
+        if promo_code_id:
+            try:
+                promo = stripe.PromotionCode.retrieve(promo_code_id)
+                coupon = promo.coupon
+                discount_code = promo.code
+                if coupon.percent_off:
+                    amount = int(REPORT_PRICE_PENCE * (1 - coupon.percent_off / 100))
+                elif coupon.amount_off:
+                    amount = max(0, REPORT_PRICE_PENCE - coupon.amount_off)
+            except Exception:
+                pass
 
         order = Order.objects.create(
             domain=domain,
@@ -52,17 +109,24 @@ def create_payment_intent(request):
             utm_term=data.get('utm_term', ''),
             utm_content=data.get('utm_content', ''),
             referrer=data.get('referrer', ''),
+            discount_code=discount_code,
+            amount_paid=amount,
         )
 
-        intent = stripe.PaymentIntent.create(
-            amount=REPORT_PRICE_PENCE,
-            currency='gbp',
-            metadata={
+        intent_params = {
+            'amount': amount,
+            'currency': 'gbp',
+            'metadata': {
                 'order_id': str(order.id),
                 'domain': domain,
                 'email': email,
             }
-        )
+        }
+
+        if promo_code_id:
+            intent_params['discounts'] = [{'promotion_code': promo_code_id}]
+
+        intent = stripe.PaymentIntent.create(**intent_params)
 
         order.stripe_payment_intent_id = intent.id
         order.save()
@@ -70,6 +134,8 @@ def create_payment_intent(request):
         return JsonResponse({
             'client_secret': intent.client_secret,
             'order_id': str(order.id),
+            'amount': amount,
+            'amount_display': f'£{amount / 100:.2f}',
         })
 
     except Exception as e:
@@ -111,8 +177,10 @@ def checkout(request):
         'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
     })
 
+
 def privacy_policy(request):
     return render(request, 'legal/privacy_policy.html')
+
 
 def terms_and_conditions(request):
     return render(request, 'legal/terms_and_conditions.html')

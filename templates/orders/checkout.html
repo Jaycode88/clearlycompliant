@@ -108,7 +108,7 @@
     <p class="section-sub">Enter your domain below. We'll scan your site and email your report within minutes.</p>
 
     <div class="checkout-card">
-        <div class="price-tag">£29.99 <span>one-off payment</span></div>
+        <div class="price-tag" id="price-display">£29.99 <span>one-off payment</span></div>
         <div class="price-sub">Full compliance report delivered to your inbox — no subscription, no recurring fees.</div>
 
         <div id="error-message" class="error-box" style="display:none;"></div>
@@ -125,6 +125,14 @@
                 <label for="email">Email Address</label>
                 <input type="email" id="email" placeholder="you@example.com">
                 <small>We'll send your report here within a few minutes of payment.</small>
+            </div>
+            <div class="field-group">
+                <label for="discount-code">Discount Code <span style="font-weight:400; color:#9ca3af;">(optional)</span></label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="discount-code" placeholder="Enter code" style="text-transform:uppercase; flex:1;">
+                    <button type="button" id="apply-btn" onclick="applyDiscount()" style="width:auto; padding:11px 16px; font-size:14px; margin-top:0;">Apply</button>
+                </div>
+                <div id="discount-message" style="margin-top:6px; font-size:13px; display:none;"></div>
             </div>
             <div class="field-group">
                 <label>Card Details</label>
