@@ -152,6 +152,8 @@ def create_payment_intent(request):
         if amount == 0:
             order.status = Order.Status.PAID
             order.save()
+            from mailer.tasks import send_confirmation_email
+            send_confirmation_email(str(order.id))
             thread = threading.Thread(target=run_scan_sync, args=(str(order.id),))
             thread.daemon = True
             thread.start()
@@ -205,6 +207,8 @@ def stripe_webhook(request):
             order = Order.objects.get(id=order_id)
             order.status = Order.Status.PAID
             order.save()
+            from mailer.tasks import send_confirmation_email
+            send_confirmation_email(str(order.id))
             thread = threading.Thread(target=run_scan_sync, args=(str(order.id),))
             thread.daemon = True
             thread.start()
@@ -226,3 +230,23 @@ def privacy_policy(request):
 
 def terms_and_conditions(request):
     return render(request, 'legal/terms_and_conditions.html')
+
+
+def order_status(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        return JsonResponse({
+            'status': order.status,
+            'domain': order.domain,
+            'email': order.email,
+        })
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
+
+def order_status_page(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        return render(request, 'orders/status.html', {'order': order})
+    except Order.DoesNotExist:
+        return render(request, 'orders/status.html', {'order': None})

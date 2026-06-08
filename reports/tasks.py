@@ -1,8 +1,9 @@
+import logging
 from orders.models import Order
 from scanner.models import ScanResult
 from .models import Report
 from .generator import generate_report
-import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +17,13 @@ def generate_report_task(order_id):
         pdf_bytes = generate_report(order, scan_result)
         Report.objects.create(order=order, pdf=pdf_bytes)
 
+        order.status = Order.Status.EMAILING
+        order.save()
+
         send_report_email(order_id)
+
+        order.status = Order.Status.COMPLETE
+        order.save()
 
     except (Order.DoesNotExist, ScanResult.DoesNotExist) as e:
         logger.error(f'Order or ScanResult not found for {order_id}: {e}')

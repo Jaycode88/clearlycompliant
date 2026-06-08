@@ -8,6 +8,9 @@ class Order(models.Model):
         PENDING = 'pending', 'Pending'
         PAID = 'paid', 'Paid'
         SCANNING = 'scanning', 'Scanning'
+        ANALYSING = 'analysing', 'Analysing'
+        GENERATING = 'generating', 'Generating Report'
+        EMAILING = 'emailing', 'Sending Email'
         COMPLETE = 'complete', 'Complete'
         FAILED = 'failed', 'Failed'
 

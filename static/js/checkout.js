@@ -125,6 +125,7 @@ async function applyDiscount() {
     applyBtn.textContent = 'Apply';
 }
 
+
 async function handleSubmit() {
     const domain = document.getElementById('domain').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -170,13 +171,7 @@ async function handleSubmit() {
 
         // Handle free order (100% discount)
         if (data.free) {
-            document.getElementById('checkout-form').style.display = 'none';
-            successDiv.innerHTML = `
-                <strong>Order confirmed!</strong><br>
-                We're now scanning <strong>${domain}</strong>.<br>
-                Your report will be emailed to <strong>${email}</strong> within a few minutes.
-            `;
-            successDiv.style.display = 'block';
+            window.location.href = `/orders/status/${data.order_id}/`;
             return;
         }
 
@@ -202,13 +197,7 @@ async function handleSubmit() {
             throw new Error(message);
         }
 
-        document.getElementById('checkout-form').style.display = 'none';
-        successDiv.innerHTML = `
-            <strong>Payment successful!</strong><br>
-            We're now scanning <strong>${domain}</strong>.<br>
-            Your report will be emailed to <strong>${email}</strong> within a few minutes.
-        `;
-        successDiv.style.display = 'block';
+        window.location.href = `/orders/status/${data.order_id}/`;
 
     } catch (err) {
         errorDiv.textContent = err.message;

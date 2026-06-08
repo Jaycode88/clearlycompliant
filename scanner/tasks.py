@@ -17,7 +17,9 @@ def run_scan(order_id):
         results = scan_domain(order.domain)
         logger.info(f'Scan complete for {order.domain}')
 
-        # Run AI analysis if policy texts are available
+        order.status = Order.Status.ANALYSING
+        order.save()
+
         logger.info(f'Running AI analysis for {order.domain}')
         privacy_analysis = analyse_privacy_policy(
             results.get('privacy_policy_text', ''),
@@ -77,7 +79,7 @@ def run_scan(order_id):
         )
 
         if not results['error']:
-            order.status = Order.Status.COMPLETE
+            order.status = Order.Status.GENERATING
             order.save()
             from reports.tasks import generate_report_task
             generate_report_task(str(order.id))

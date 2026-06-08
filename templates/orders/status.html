@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/status.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="status-section">
+    {% if order %}
+    <div class="status-card">
+        <div class="status-header">
+            <h1>Processing Your Report</h1>
+            <p>We're scanning <strong>{{ order.domain }}</strong> and will email your report to <strong>{{ order.email }}</strong>.</p>
+        </div>
+
+        <div class="status-steps" id="status-steps">
+            <div class="step" id="step-paid">
+                <div class="step-icon">✓</div>
+                <div class="step-content">
+                    <div class="step-title">Payment Confirmed</div>
+                    <div class="step-desc">Your order has been received.</div>
+                </div>
+            </div>
+            <div class="step" id="step-scanning">
+                <div class="step-icon">🔍</div>
+                <div class="step-content">
+                    <div class="step-title">Scanning Website</div>
+                    <div class="step-desc">Running 23 GDPR compliance checks on {{ order.domain }}.</div>
+                </div>
+            </div>
+            <div class="step" id="step-analysing">
+                <div class="step-icon">🤖</div>
+                <div class="step-content">
+                    <div class="step-title">AI Policy Analysis</div>
+                    <div class="step-desc">Analysing your privacy policy and terms & conditions.</div>
+                </div>
+            </div>
+            <div class="step" id="step-generating">
+                <div class="step-icon">📄</div>
+                <div class="step-content">
+                    <div class="step-title">Generating Report</div>
+                    <div class="step-desc">Building your detailed PDF compliance report.</div>
+                </div>
+            </div>
+            <div class="step" id="step-emailing">
+                <div class="step-icon">✉️</div>
+                <div class="step-content">
+                    <div class="step-title">Sending Report</div>
+                    <div class="step-desc">Emailing your report to {{ order.email }}.</div>
+                </div>
+            </div>
+            <div class="step" id="step-complete" style="display:none;">
+                <div class="step-icon success">✓</div>
+                <div class="step-content">
+                    <div class="step-title">Report Delivered!</div>
+                    <div class="step-desc">Your report has been sent to {{ order.email }}. Please check your inbox and spam folder.</div>
+                </div>
+            </div>
+            <div class="step" id="step-failed" style="display:none;">
+                <div class="step-icon error">✗</div>
+                <div class="step-content">
+                    <div class="step-title">Something Went Wrong</div>
+                    <div class="step-desc">We encountered an issue processing your report. Our team has been notified and will contact you at {{ order.email }}.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-note">
+            <p>⏱ Reports are typically ready within <strong>3–5 minutes</strong>. You can safely close this page — your report will be emailed to you.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="status-card">
+        <h1>Order Not Found</h1>
+        <p>We couldn't find this order. Please contact us at <a href="mailto:admin@clearlycompliant.co.uk">admin@clearlycompliant.co.uk</a>.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    const orderId = '{{ order.id }}';
+    const statusOrder = ['pending', 'paid', 'scanning', 'analysing', 'generating', 'emailing', 'complete', 'failed'];
+    const stepMap = {
+        'paid': 'step-paid',
+        'scanning': 'step-scanning',
+        'analysing': 'step-analysing',
+        'generating': 'step-generating',
+        'emailing': 'step-emailing',
+        'complete': 'step-complete',
+        'failed': 'step-failed',
+    };
+
+    function updateSteps(status) {
+        const currentIndex = statusOrder.indexOf(status);
+
+        // Mark all previous steps as complete
+        Object.entries(stepMap).forEach(([s, id]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const sIndex = statusOrder.indexOf(s);
+
+            if (s === 'complete' || s === 'failed') {
+                el.style.display = (status === s) ? 'flex' : 'none';
+                return;
+            }
+
+            if (sIndex < currentIndex) {
+                el.classList.add('done');
+                el.classList.remove('active');
+            } else if (sIndex === currentIndex) {
+                el.classList.add('active');
+                el.classList.remove('done');
+            } else {
+                el.classList.remove('active', 'done');
+            }
+        });
+    }
+
+    async function pollStatus() {
+        try {
+            const response = await fetch(`/orders/api/status/${orderId}/`);
+            const data = await response.json();
+
+            updateSteps(data.status);
+
+            if (data.status === 'complete' || data.status === 'failed') {
+                return; // Stop polling
+            }
+
+            setTimeout(pollStatus, 3000); // Poll every 3 seconds
+        } catch (err) {
+            setTimeout(pollStatus, 5000); // Retry after 5 seconds on error
+        }
+    }
+
+    // Start polling
+    pollStatus();
+</script>
+{% endblock %}

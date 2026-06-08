@@ -88,3 +88,33 @@ The ClearlyCompliant Team
 
     except Exception as e:
         logger.error(f'Failed to send failure email for order {order_id}: {e}')
+
+
+
+def send_confirmation_email(order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        logger.info(f'Sending confirmation email to {order.email}')
+
+        email = EmailMessage(
+            subject=f'Your GDPR Report Order Confirmed — {order.domain}',
+            body=f"""Hi,
+
+Thank you for your order!
+
+We've received your payment and are now scanning {order.domain} for GDPR compliance issues.
+
+Your full report will be emailed to this address within 3–5 minutes.
+
+If you don't receive it within 10 minutes, please check your spam folder or contact us at admin@clearlycompliant.co.uk.
+
+The ClearlyCompliant Team
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[order.email],
+        )
+        email.send()
+        logger.info(f'Confirmation email sent to {order.email}')
+
+    except Exception as e:
+        logger.error(f'Failed to send confirmation email for order {order_id}: {e}')
