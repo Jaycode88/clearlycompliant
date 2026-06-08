@@ -66,13 +66,13 @@ CMS_SIGNATURES = {
     'Webflow': ['webflow.com', 'webflow.io'],
     'Drupal': ['drupal.js', 'drupal.min.js', 'sites/default/files'],
     'Joomla': ['joomla', '/components/com_'],
-    'Magento': ['mage/', 'Mage.Cookies'],
+    'Magento': ['wp-content/mage/', 'requirejs/mage/', 'Mage.Cookies', '/mage/cookies'],
 }
 
 ECOMMERCE_SIGNATURES = {
     'WooCommerce': ['woocommerce', 'wc-cart', 'wc_add_to_cart'],
     'Shopify': ['cdn.shopify.com', 'shopify.com/s/'],
-    'Magento': ['mage/', 'Mage.Cookies'],
+    'Magento': ['requirejs/mage/', 'Mage.Cookies', 'magento/theme'],
     'BigCommerce': ['bigcommerce.com'],
     'PrestaShop': ['prestashop'],
     'OpenCart': ['opencart'],
