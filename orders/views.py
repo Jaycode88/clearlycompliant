@@ -17,6 +17,7 @@ REPORT_PRICE_PENCE = 2999  # £29.99
 def is_valid_domain(domain):
     domain = domain.strip().lower()
     domain = re.sub(r'^https?://', '', domain)
+    domain = domain.strip('/')
     pattern = r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
     return bool(re.match(pattern, domain))
 
@@ -107,13 +108,14 @@ def create_payment_intent(request):
         email = data.get('email', '').strip()
         promo_code_id = data.get('promo_code_id', '').strip()
 
+        # Normalise domain before validation — strip protocol and trailing slashes
+        domain = re.sub(r'^https?://', '', domain).strip('/')
+
         if not domain or not email:
             return JsonResponse({'error': 'Domain and email are required.'}, status=400)
 
         if not is_valid_domain(domain):
             return JsonResponse({'error': 'Please enter a valid domain name, e.g. example.com'}, status=400)
-
-        domain = re.sub(r'^https?://', '', domain).strip('/')
 
         amount = REPORT_PRICE_PENCE
         discount_code = ''
