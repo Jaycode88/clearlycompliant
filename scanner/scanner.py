@@ -94,19 +94,44 @@ SOCIAL_EMBED_SIGNATURES = {
 }
 
 COOKIE_BANNER_SIGNATURES = [
+    # Consent platforms
     'cookiebot',
     'cookieconsent',
     'cookie-consent',
     'cookie_consent',
     'cookie-banner',
     'cookie-notice',
-    'gdpr',
     'onetrust',
     'trustarc',
     'osano',
     'usercentrics',
     'termly',
     'js-cookie-consent',
+    # WordPress plugins
+    'cmplz-',
+    'complianz',
+    'borlabs-cookie',
+    'cookieyes',
+    'iubenda',
+    'real-cookie-banner',
+    'wp-cookie-notice',
+    'cookie-law-info',
+    'moove-gdpr',
+    'webtoffee-gdpr',
+    # Generic consent indicators in rendered HTML
+    'show--consent',
+    'cookie-consent-banner',
+    'cookie-overlay',
+    'cookie-popup',
+    'consent-banner',
+    'consent-popup',
+    'consent-overlay',
+    'gdpr-banner',
+    'gdpr-popup',
+    'gdpr-consent',
+    'cc-banner',
+    'cc-window',
+    'cc-popup',
 ]
 
 PRIVACY_KEYWORDS = [
@@ -232,6 +257,7 @@ def normalise_domain(domain):
 
 
 def fetch_page(url, timeout=15):
+    """Fetch a page using requests — used for policy pages."""
     try:
         response = requests.get(
             url,
@@ -245,7 +271,41 @@ def fetch_page(url, timeout=15):
         return None
 
 
+def fetch_rendered_page(url, timeout=30):
+    """
+    Fetch a page using Playwright to get fully JS-rendered HTML.
+    Returns (html, final_url, headers_dict) or None on failure.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                user_agent='ClearlyCompliant GDPR Scanner/1.0',
+                ignore_https_errors=True,
+            )
+            page = context.new_page()
+
+            response = page.goto(url, wait_until='domcontentloaded', timeout=timeout * 1000)
+            page.wait_for_timeout(3000)  # wait for JS to render
+
+            html = page.content()
+            final_url = page.url
+
+            # Get response headers from initial navigation
+            headers = {}
+            if response:
+                headers = dict(response.headers)
+
+            browser.close()
+            return html, final_url, headers
+
+    except Exception as e:
+        return None
+
+
 def find_policy_url(soup, base_url, keywords):
+    """Find a policy URL by scanning anchor links for keyword matches."""
     for a in soup.find_all('a', href=True):
         href = a['href'].lower()
         link_text = a.get_text().lower()
@@ -256,6 +316,7 @@ def find_policy_url(soup, base_url, keywords):
 
 
 def try_common_paths(base_url, paths):
+    """Try a list of common URL paths and return the first that responds successfully."""
     parsed = urlparse(base_url)
     root = f'{parsed.scheme}://{parsed.netloc}'
     for path in paths:
@@ -267,6 +328,7 @@ def try_common_paths(base_url, paths):
 
 
 def fetch_policy_text(url):
+    """Fetch a policy page and return its text content."""
     if not url:
         return ''
     time.sleep(1)
@@ -282,15 +344,12 @@ def fetch_policy_text(url):
 def scan_domain(domain):
     domain = normalise_domain(domain)
     results = {
-        # Section 1 - Technical Security
         'is_https': False,
         'has_mixed_content': False,
         'has_x_frame_options': False,
         'has_content_security_policy': False,
         'has_x_content_type_options': False,
         'has_referrer_policy': False,
-
-        # Section 2 - Privacy & Legal Documents
         'has_privacy_policy': False,
         'has_cookie_policy': False,
         'has_terms_and_conditions': False,
@@ -299,20 +358,14 @@ def scan_domain(domain):
         'terms_url': '',
         'privacy_policy_text': '',
         'terms_text': '',
-
-        # Section 3 - Consent & Cookie Management
         'has_cookie_banner': False,
         'has_cookie_preferences_link': False,
         'has_form_consent_checkbox': False,
-
-        # Section 4 - Data Collection
         'has_contact_form': False,
         'has_newsletter_signup': False,
         'has_login': False,
         'has_ecommerce': False,
         'ecommerce_platform': '',
-
-        # Section 5 - Third Party & Tracking
         'has_google_analytics': False,
         'has_facebook_pixel': False,
         'has_other_trackers': False,
@@ -326,35 +379,33 @@ def scan_domain(domain):
         'has_social_embeds': False,
         'social_embeds_found': [],
         'cms_detected': '',
-
-        # Section 6 - User Rights
         'has_unsubscribe_mechanism': False,
         'has_contact_info': False,
         'has_dpo_info': False,
         'has_data_subject_rights': False,
-
-        # Meta
         'raw_html': '',
         'error': '',
         'error_type': '',
     }
 
     try:
-        response = fetch_page(domain)
-        if not response:
+        # Use Playwright for full JS rendering
+        rendered = fetch_rendered_page(domain)
+
+        if not rendered:
             raise requests.exceptions.ConnectionError()
 
-        html = response.text
+        html, final_url, resp_headers = rendered
         results['raw_html'] = html[:50000]
-        results['is_https'] = response.url.startswith('https://')
+        results['is_https'] = final_url.startswith('https://')
 
         soup = BeautifulSoup(html, 'html.parser')
         text = soup.get_text(separator=' ').lower()
         all_html_lower = html.lower()
-        base_url = response.url
+        base_url = final_url
 
         # --- Section 1: Technical Security ---
-        headers = {k.lower(): v for k, v in response.headers.items()}
+        headers = {k.lower(): v for k, v in resp_headers.items()}
         results['has_x_frame_options'] = 'x-frame-options' in headers
         results['has_content_security_policy'] = 'content-security-policy' in headers
         results['has_x_content_type_options'] = 'x-content-type-options' in headers
@@ -368,8 +419,6 @@ def scan_domain(domain):
                     break
 
         # --- Section 2: Privacy & Legal Documents ---
-
-        # Privacy policy
         privacy_url = find_policy_url(soup, base_url, ['privacy-policy', 'privacy_policy', 'privacy', 'data-protection'])
         if not privacy_url:
             privacy_url = try_common_paths(base_url, COMMON_PRIVACY_PATHS)
@@ -380,7 +429,6 @@ def scan_domain(domain):
         elif any(k in text for k in PRIVACY_KEYWORDS):
             results['has_privacy_policy'] = True
 
-        # Cookie policy
         cookie_url = find_policy_url(soup, base_url, ['cookie-policy', 'cookie_policy', 'cookies'])
         if not cookie_url:
             cookie_url = try_common_paths(base_url, COMMON_COOKIE_PATHS)
@@ -389,7 +437,6 @@ def scan_domain(domain):
         elif any(k in text for k in COOKIE_POLICY_KEYWORDS):
             results['has_cookie_policy'] = True
 
-        # Terms and conditions
         terms_url = find_policy_url(soup, base_url, ['terms-and-conditions', 'terms_and_conditions', 'terms-of-service', 'terms-of-use', 'terms', 'legal'])
         if not terms_url:
             terms_url = try_common_paths(base_url, COMMON_TERMS_PATHS)
@@ -569,7 +616,7 @@ def scan_domain(domain):
         results['error'] = f'Could not connect to {domain}. The domain may not exist or is currently unreachable.'
         results['error_type'] = 'connection_error'
     except requests.exceptions.Timeout:
-        results['error'] = f'Connection to {domain} timed out after 15 seconds.'
+        results['error'] = f'Connection to {domain} timed out after 30 seconds.'
         results['error_type'] = 'timeout'
     except requests.exceptions.TooManyRedirects:
         results['error'] = f'{domain} has too many redirects and could not be scanned.'
