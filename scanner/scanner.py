@@ -79,9 +79,18 @@ ECOMMERCE_SIGNATURES = {
 }
 
 ECOMMERCE_INDICATORS = [
-    'add to cart', 'add to basket', 'buy now', 'checkout',
-    'shopping cart', 'shopping basket', 'your cart', 'your basket',
-    'proceed to checkout', 'view cart', 'product', 'shop now',
+    'add to cart',
+    'add to basket',
+    'buy now',
+    'checkout',
+    'shopping cart',
+    'shopping basket',
+    'your cart',
+    'your basket',
+    'proceed to checkout',
+    'view cart',
+    'shop now',
+    'add to trolley',
 ]
 
 SOCIAL_EMBED_SIGNATURES = {
