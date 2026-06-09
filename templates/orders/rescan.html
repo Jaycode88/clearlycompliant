@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/status.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="status-section">
+    <div class="status-card" style="text-align:center;">
+        <div style="font-size:56px; margin-bottom:20px;">🔄</div>
+        <h1 style="font-size:26px; font-weight:800; color:#0f2044; margin-bottom:12px;">Free Re-scan Available</h1>
+        <p style="font-size:15px; color:#64748b; line-height:1.7; margin-bottom:8px;">
+            You have a free re-scan available for <strong>{{ order.domain }}</strong>.
+        </p>
+        <p style="font-size:14px; color:#94a3b8; margin-bottom:32px;">
+            {{ order.rescan_days_remaining }} day{{ order.rescan_days_remaining|pluralize }} remaining on your free re-scan offer.
+        </p>
+
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:20px; margin-bottom:32px; text-align:left;">
+            <p style="font-size:13px; color:#15803d; margin:0 0 8px; font-weight:600;">What your re-scan includes:</p>
+            <ul style="font-size:13px; color:#15803d; margin:0; padding-left:20px; line-height:1.8;">
+                <li>Full 23-check GDPR compliance scan</li>
+                <li>AI-powered privacy policy analysis</li>
+                <li>AI-powered T&C analysis</li>
+                <li>New PDF report emailed to {{ order.email }}</li>
+            </ul>
+        </div>
+
+        <div id="error-message" class="error-box" style="display:none;"></div>
+
+        <button id="rescan-btn" onclick="startRescan()" style="background:#c9a84c; color:#0f2044; border:none; padding:14px 40px; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:16px;">
+            <span id="btn-text">Start Free Re-scan</span>
+            <span id="btn-spinner" style="display:none;">Starting scan...</span>
+        </button>
+
+        <p style="font-size:12px; color:#94a3b8;">Results will be emailed to {{ order.email }}</p>
+    </div>
+</div>
+
+<script>
+    async function startRescan() {
+        const btn = document.getElementById('rescan-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const errorDiv = document.getElementById('error-message');
+
+        btn.disabled = true;
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline';
+        errorDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('{% url "start_rescan" order.free_result_token %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            window.location.href = `/orders/status/${data.order_id}/`;
+
+        } catch (err) {
+            errorDiv.textContent = err.message;
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btnText.style.display = 'inline';
+            btnSpinner.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

@@ -16,11 +16,18 @@
         <p style="font-size:14px; color:#64748b; line-height:1.7; margin-bottom:32px;">
             Please check your inbox — and your spam folder if you don't see it within a few minutes.
         </p>
-        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:20px; margin-bottom:32px;">
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:20px; margin-bottom:24px;">
             <p style="font-size:13px; color:#15803d; margin:0; line-height:1.6;">
                 Your report includes a full breakdown of all 23 compliance checks, specific details on every failed check, and AI-powered analysis of your privacy policy and terms & conditions.
             </p>
         </div>
+        {% if token %}
+        <div style="background:#f8f8ff; border:1px solid #e0e0ff; border-radius:10px; padding:20px; margin-bottom:24px; text-align:left;">
+            <p style="font-size:14px; color:#0f2044; font-weight:600; margin:0 0 6px;">🔄 Free Re-scan Included</p>
+            <p style="font-size:13px; color:#64748b; margin:0 0 12px; line-height:1.6;">Made changes to your site? Re-scan {{ domain }} for free within 30 days to get an updated report.</p>
+            <a href="/orders/rescan/{{ token }}/" style="font-size:13px; color:#6366f1; font-weight:600; text-decoration:none;">Re-scan my site free →</a>
+        </div>
+        {% endif %}
         <a href="/" style="display:inline-block; background:#0f2044; color:#ffffff; font-size:14px; font-weight:600; padding:12px 28px; border-radius:8px; text-decoration:none;">Scan Another Domain</a>
     </div>
 </div>

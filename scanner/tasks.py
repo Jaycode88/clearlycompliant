@@ -81,8 +81,14 @@ def run_scan(order_id):
         if not results['error']:
             order.status = Order.Status.COMPLETE
             order.save()
-            from mailer.tasks import send_free_summary_email
-            send_free_summary_email(str(order.id))
+            if order.report_type in [Order.ReportType.PAID, Order.ReportType.RESCAN]:
+                order.status = Order.Status.GENERATING
+                order.save()
+                from reports.tasks import generate_report_task
+                generate_report_task(str(order.id))
+            else:
+                from mailer.tasks import send_free_summary_email
+                send_free_summary_email(str(order.id))
         else:
             logger.error(f'Scan error for {order.domain}: {results["error"]}')
             order.status = Order.Status.FAILED

@@ -10,7 +10,6 @@
     <div class="results-hero-inner">
         <p class="results-domain">Results for <strong>{{ order.domain }}</strong></p>
         {% if scan_result %}
-            {% with passed=0 total=23 %}
             <div class="score-display" id="score-display">
                 <div class="score-circle" id="score-circle">
                     <span class="score-number" id="score-number">0%</span>
@@ -20,7 +19,6 @@
                     <div class="score-sub" id="score-sub">Scanning complete</div>
                 </div>
             </div>
-            {% endwith %}
         {% else %}
             <p>Your results are still being processed. Please check back in a moment.</p>
         {% endif %}
@@ -63,9 +61,11 @@
                     <li>✓ AI analysis of your terms & conditions</li>
                     <li>✓ Detailed PDF report by email</li>
                     <li>✓ Actionable recommendations</li>
+                    <li>✓ Free re-scan within 30 days</li>
                 </ul>
 
                 <div class="upgrade-price">£29.99 <span>one-off payment</span></div>
+                <p style="font-size:12px; color:#15803d; margin:-12px 0 16px; font-weight:500;">✓ Includes free re-scan within 30 days</p>
 
                 <div id="upgrade-error" class="error-box" style="display:none;"></div>
                 <div id="upgrade-success" class="success-box" style="display:none;"></div>
@@ -103,7 +103,6 @@
     const orderToken = '{{ order.free_result_token }}';
     const stripePublishableKey = '{{ stripe_publishable_key }}';
 
-    // Scan result data for JS score calculation
     const scanData = {
         is_https: {{ scan_result.is_https|yesno:"true,false" }},
         has_mixed_content: {{ scan_result.has_mixed_content|yesno:"true,false" }},

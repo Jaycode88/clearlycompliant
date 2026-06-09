@@ -25,7 +25,10 @@ def send_report_email(order_id):
         order = Order.objects.get(id=order_id)
         report = Report.objects.get(order=order)
 
-        logger.info(f'Attempting to send email to {order.email}')
+        rescan_section = ''
+        if order.report_type == 'paid':
+            rescan_url = f'https://clearlycompliant.co.uk/orders/rescan/{order.free_result_token}/'
+            rescan_section = f'\n\nFREE RE-SCAN AVAILABLE\nYou can re-scan {order.domain} for free within 30 days of this report. Use this link:\n{rescan_url}\n'
 
         email = EmailMessage(
             subject=f'Your GDPR Compliance Report — {order.domain}',
@@ -33,11 +36,11 @@ def send_report_email(order_id):
 
 Thank you for using ClearlyCompliant.
 
-Please find attached your GDPR compliance report for {order.domain}.
+Please find attached your full GDPR compliance report for {order.domain}.
 
-The report contains a detailed breakdown of your site's GDPR compliance status, including any areas that need attention.
-
-If you have any questions, please don't hesitate to get in touch.
+The report contains a detailed breakdown of your site's GDPR compliance status, including specific recommendations and AI-powered analysis of your privacy policy and terms & conditions.
+{rescan_section}
+If you have any questions, please don't hesitate to get in touch at admin@clearlycompliant.co.uk.
 
 The ClearlyCompliant Team
 """,

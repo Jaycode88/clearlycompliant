@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/status.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="status-section">
+    <div class="status-card" style="text-align:center;">
+        <div style="font-size:56px; margin-bottom:20px;">⏰</div>
+        <h1 style="font-size:26px; font-weight:800; color:#0f2044; margin-bottom:12px;">Re-scan Offer Expired</h1>
+        <p style="font-size:15px; color:#64748b; line-height:1.7; margin-bottom:32px;">
+            Your free re-scan offer for <strong>{{ order.domain }}</strong> has either expired or already been used.
+            Free re-scans are available within 30 days of your original report purchase.
+        </p>
+        <a href="/" style="display:inline-block; background:#c9a84c; color:#0f2044; font-size:15px; font-weight:700; padding:14px 32px; border-radius:8px; text-decoration:none;">
+            Get a New Report — £29.99
+        </a>
+    </div>
+</div>
+{% endblock %}

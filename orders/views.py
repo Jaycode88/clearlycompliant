@@ -290,6 +290,7 @@ def order_status(request, order_id):
             'domain': order.domain,
             'email': order.email,
             'token': str(order.free_result_token),
+            'report_type': order.report_type,
         })
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
@@ -314,7 +315,60 @@ def terms_and_conditions(request):
 def order_complete(request):
     domain = request.GET.get('domain', '')
     email = request.GET.get('email', '')
+    token = request.GET.get('token', '')
     return render(request, 'orders/order_complete.html', {
         'domain': domain,
         'email': email,
+        'token': token,
     })
+
+
+
+def rescan_page(request, token):
+    """Show the rescan confirmation page."""
+    order = get_object_or_404(Order, free_result_token=token, report_type=Order.ReportType.PAID)
+
+    if not order.rescan_eligible:
+        return render(request, 'orders/rescan_expired.html', {'order': order})
+
+    return render(request, 'orders/rescan.html', {
+        'order': order,
+    })
+
+
+@require_POST
+def start_rescan(request, token):
+    """Start a free rescan for an eligible paid order."""
+    try:
+        original_order = get_object_or_404(Order, free_result_token=token, report_type=Order.ReportType.PAID)
+
+        if not original_order.rescan_eligible:
+            return JsonResponse({'error': 'This re-scan offer has expired or already been used.'}, status=400)
+
+        # Create new order linked to original
+        new_order = Order.objects.create(
+            domain=original_order.domain,
+            email=original_order.email,
+            report_type=Order.ReportType.RESCAN,
+            status=Order.Status.PAID,
+            amount_paid=0,
+            rescan_of=original_order,
+        )
+
+        # Start scan in background
+        thread = threading.Thread(target=run_full_report_sync, args=(str(new_order.id),))
+        thread.daemon = True
+        thread.start()
+
+        return JsonResponse({
+            'order_id': str(new_order.id),
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def run_full_report_sync(order_id):
+    """Run full scan and generate report for a paid/rescan order."""
+    from scanner.tasks import run_scan
+    run_scan(order_id)

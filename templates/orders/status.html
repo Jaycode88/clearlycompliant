@@ -47,7 +47,7 @@
                 <div class="step-icon success">✓</div>
                 <div class="step-content">
                     <div class="step-title">Scan Complete!</div>
-                    <div class="step-desc">Your results are ready. Taking you to your report now...</div>
+                    <div class="step-desc">Your results are ready. Taking you there now...</div>
                 </div>
             </div>
             <div class="step" id="step-failed" style="display:none;">
@@ -86,7 +86,6 @@
     function updateSteps(status) {
         const currentIndex = statusOrder.indexOf(status);
 
-        // Mark all previous steps as complete
         Object.entries(stepMap).forEach(([s, id]) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -118,7 +117,11 @@
 
             if (data.status === 'complete') {
                 setTimeout(() => {
-                    window.location.href = `/orders/results/${data.token}/`;
+                    if (data.report_type === 'paid' || data.report_type === 'rescan') {
+                        window.location.href = `/orders/complete/?domain=${encodeURIComponent(data.domain)}&email=${encodeURIComponent(data.email)}&token=${encodeURIComponent(data.token)}`;
+                    } else {
+                        window.location.href = `/orders/results/${data.token}/`;
+                    }
                 }, 1500);
                 return;
             }
@@ -133,7 +136,6 @@
         }
     }
 
-    // Start polling
     pollStatus();
 </script>
 {% endblock %}

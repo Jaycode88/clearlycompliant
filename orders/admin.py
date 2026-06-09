@@ -18,7 +18,8 @@ class OrderAdmin(admin.ModelAdmin):
         'id', 'free_result_token', 'created_at', 'updated_at',
         'utm_source', 'utm_medium', 'utm_campaign',
         'utm_term', 'utm_content', 'referrer',
-        'stripe_payment_intent_id',
+        'stripe_payment_intent_id', 'rescan_eligible',
+        'rescan_days_remaining',
     ]
     fieldsets = [
         ('Order Details', {
@@ -26,6 +27,9 @@ class OrderAdmin(admin.ModelAdmin):
         }),
         ('Free Report', {
             'fields': ['free_result_token', 'free_results_viewed']
+        }),
+        ('Re-scan', {
+            'fields': ['rescan_of', 'rescan_eligible', 'rescan_days_remaining']
         }),
         ('Payment', {
             'fields': ['discount_code', 'amount_paid']

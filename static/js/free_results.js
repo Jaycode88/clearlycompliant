@@ -244,7 +244,7 @@ async function handleUpgrade() {
         if (data.error) throw new Error(data.error);
 
         if (data.free) {
-            window.location.href = `/orders/complete/?domain=${encodeURIComponent(data.domain)}&email=${encodeURIComponent(data.email)}`;
+            window.location.href = `/orders/complete/?domain=${encodeURIComponent(data.domain)}&email=${encodeURIComponent(data.email)}&token=${encodeURIComponent(orderToken)}`;
             return;
         }
 
@@ -260,7 +260,7 @@ async function handleUpgrade() {
 
         if (error) throw new Error(error.message);
 
-        window.location.href = `/orders/complete/?domain=${encodeURIComponent(data.domain)}&email=${encodeURIComponent(data.email)}`;
+        window.location.href = `/orders/complete/?domain=${encodeURIComponent(data.domain)}&email=${encodeURIComponent(data.email)}&token=${encodeURIComponent(orderToken)}`;
 
     } catch (err) {
         errorDiv.textContent = err.message;

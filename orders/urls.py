@@ -13,4 +13,6 @@ urlpatterns = [
     path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
     path('terms-and-conditions/', views.terms_and_conditions, name='terms_and_conditions'),
     path('complete/', views.order_complete, name='order_complete'),
+    path('rescan/<uuid:token>/', views.rescan_page, name='rescan_page'),
+    path('rescan/<uuid:token>/start/', views.start_rescan, name='start_rescan'),
 ]
