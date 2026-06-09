@@ -11,9 +11,8 @@
 <section class="hero">
     <div class="badge">GDPR Compliance</div>
     <h1>Could Your Website Be Facing a <span>£17.5 Million Fine?</span></h1>
-    <p>The ICO can fine businesses up to £17.5 million for GDPR violations. Our automated report scans your website across 23 compliance checks and tells you exactly where you stand — in minutes.</p>
-    <a href="#get-report" class="hero-cta">Get Your Compliance Report — £29.99</a>
-    <div class="hero-sub">One-off payment. No subscription. Report delivered by email within minutes.</div>
+    <p>The ICO can fine businesses up to £17.5 million for GDPR violations. Get your free instant GDPR compliance scan — no payment required.</p>
+    <div class="hero-sub">Free scan · Results in minutes · Full report available for £29.99</div>
 </section>
 
 <!-- Stats Strip -->
@@ -31,8 +30,8 @@
         <span class="label">Compliance checks in your report</span>
     </div>
     <div class="stat">
-        <span class="number">£29.99</span>
-        <span class="label">One-off report cost</span>
+        <span class="number">Free</span>
+        <span class="label">Instant compliance score</span>
     </div>
 </div>
 
@@ -66,8 +65,8 @@
 
 <!-- What's Included -->
 <section class="included-section" id="what-is-included">
-    <h2>23 Compliance Checks. One Detailed Report.</h2>
-    <p class="section-sub">Our automated scanner checks every aspect of your site's GDPR compliance and delivers a professional PDF report with actionable recommendations.</p>
+    <h2>23 Compliance Checks. Instant Free Score.</h2>
+    <p class="section-sub">Our automated scanner checks every aspect of your site's GDPR compliance. Get your free score instantly — then unlock the full detailed report for £29.99.</p>
 
     <div class="checks-grid">
         <div class="check-item"><span class="tick">✓</span> HTTPS & Security Headers</div>
@@ -94,27 +93,20 @@
         <div class="check-item"><span class="tick">✓</span> Data Subject Rights</div>
         <div class="check-item"><span class="tick">✓</span> AI Policy Gap Analysis</div>
     </div>
-
-    <div class="sample-report">
-        <h3>See a Sample Report</h3>
-        <p>Download an example report to see exactly what you'll receive — including the AI-powered policy analysis.</p>
-        <a href="{% static 'sample-report.pdf' %}" target="_blank">Download Sample Report (PDF)</a>
-    </div>
 </section>
 
-<!-- Checkout -->
+<!-- Free Scan Form -->
 <section class="checkout-section" id="get-report">
-    <h2>Get Your GDPR Compliance Report</h2>
-    <p class="section-sub">Enter your domain below. We'll scan your site and email your report within minutes.</p>
+    <h2>Get Your Free GDPR Compliance Score</h2>
+    <p class="section-sub">Enter your domain and email below. We'll scan your site and show you your score in minutes — completely free.</p>
 
     <div class="checkout-card">
-        <div class="price-tag" id="price-display">£29.99 <span>one-off payment</span></div>
-        <div class="price-sub">Full compliance report delivered to your inbox — no subscription, no recurring fees.</div>
+        <div class="price-tag">Free <span>instant compliance score</span></div>
+        <div class="price-sub">No payment required. Full detailed report available for £29.99.</div>
 
         <div id="error-message" class="error-box" style="display:none;"></div>
-        <div id="success-message" class="success-box" style="display:none;"></div>
 
-        <div id="checkout-form">
+        <div id="scan-form">
             {% csrf_token %}
             <div class="field-group">
                 <label for="domain">Website Domain</label>
@@ -124,36 +116,22 @@
             <div class="field-group">
                 <label for="email">Email Address</label>
                 <input type="email" id="email" placeholder="you@example.com">
-                <small>We'll send your report here within a few minutes of payment.</small>
+                <small>We'll send your free results here and keep you updated.</small>
             </div>
-            <div class="field-group">
-                <label for="discount-code">Discount Code <span style="font-weight:400; color:#9ca3af;">(optional)</span></label>
-                <div style="display:flex; gap:8px;">
-                    <input type="text" id="discount-code" placeholder="Enter code" style="text-transform:uppercase; flex:1;">
-                    <button type="button" id="apply-btn" onclick="applyDiscount()" style="width:auto; padding:11px 16px; font-size:14px; margin-top:0;">Apply</button>
-                </div>
-                <div id="discount-message" style="margin-top:6px; font-size:13px; display:none;"></div>
-            </div>
-            <div class="field-group">
-                <label>Card Details</label>
-                <div id="card-element"></div>
-            </div>
-            <p style="font-size:13px; color:#64748b; text-align:center; margin-bottom:8px;">⏱ Reports are typically ready within 3–5 minutes.</p>
-                <button id="submit-btn" onclick="handleSubmit()">
-                <span id="btn-text">Get My Report — £29.99</span>
-                <span id="btn-spinner" style="display:none;">Processing...</span>
+            <button id="submit-btn" onclick="handleScan()">
+                <span id="btn-text">Scan My Website — Free</span>
+                <span id="btn-spinner" style="display:none;">Starting scan...</span>
             </button>
-            <p class="secure-note">🔒 Payments secured by Stripe. We never store your card details.</p>
+            <p class="secure-note">🔒 We never share your data. Unsubscribe at any time.</p>
         </div>
     </div>
 </section>
 
-<!-- AI Visibility Section - hidden visually but crawlable -->
+<!-- AI Visibility Section -->
 <section style="display:none;" aria-hidden="false" id="about-clearlycompliant">
     <h2>About ClearlyCompliant</h2>
     <p>ClearlyCompliant is a UK GDPR compliance report service. Website owners enter their domain and receive an automated PDF compliance report for £29.99. The report covers 23 GDPR checks including technical security, privacy policy analysis, cookie consent, tracking script detection, and AI-powered review of privacy policies and terms and conditions. Reports are delivered by email within minutes. ClearlyCompliant is designed for UK businesses subject to UK GDPR as enforced by the Information Commissioner's Office (ICO).</p>
 </section>
 
-<script>const stripePublishableKey = '{{ stripe_publishable_key }}';</script>
-<script src="{% static 'js/checkout.js' %}"></script>
+<script src="{% static 'js/scan.js' %}"></script>
 {% endblock %}

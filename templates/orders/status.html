@@ -15,13 +15,6 @@
         </div>
 
         <div class="status-steps" id="status-steps">
-            <div class="step" id="step-paid">
-                <div class="step-icon">✓</div>
-                <div class="step-content">
-                    <div class="step-title">Payment Confirmed</div>
-                    <div class="step-desc">Your order has been received.</div>
-                </div>
-            </div>
             <div class="step" id="step-scanning">
                 <div class="step-icon">🔍</div>
                 <div class="step-content">
@@ -53,8 +46,8 @@
             <div class="step" id="step-complete" style="display:none;">
                 <div class="step-icon success">✓</div>
                 <div class="step-content">
-                    <div class="step-title">Report Delivered!</div>
-                    <div class="step-desc">Your report has been sent to {{ order.email }}. Please check your inbox and spam folder.</div>
+                    <div class="step-title">Scan Complete!</div>
+                    <div class="step-desc">Your results are ready. Taking you to your report now...</div>
                 </div>
             </div>
             <div class="step" id="step-failed" style="display:none;">
@@ -82,7 +75,6 @@
     const orderId = '{{ order.id }}';
     const statusOrder = ['pending', 'paid', 'scanning', 'analysing', 'generating', 'emailing', 'complete', 'failed'];
     const stepMap = {
-        'paid': 'step-paid',
         'scanning': 'step-scanning',
         'analysing': 'step-analysing',
         'generating': 'step-generating',
@@ -124,13 +116,20 @@
 
             updateSteps(data.status);
 
-            if (data.status === 'complete' || data.status === 'failed') {
-                return; // Stop polling
+            if (data.status === 'complete') {
+                setTimeout(() => {
+                    window.location.href = `/orders/results/${data.token}/`;
+                }, 1500);
+                return;
             }
 
-            setTimeout(pollStatus, 3000); // Poll every 3 seconds
+            if (data.status === 'failed') {
+                return;
+            }
+
+            setTimeout(pollStatus, 3000);
         } catch (err) {
-            setTimeout(pollStatus, 5000); // Retry after 5 seconds on error
+            setTimeout(pollStatus, 5000);
         }
     }
 

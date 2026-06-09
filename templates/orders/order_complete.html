@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/status.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="status-section">
+    <div class="status-card" style="text-align:center;">
+        <div style="font-size:64px; margin-bottom:20px;">✅</div>
+        <h1 style="font-size:26px; font-weight:800; color:#0f2044; margin-bottom:12px;">Your Full Report Is On Its Way!</h1>
+        <p style="font-size:15px; color:#64748b; line-height:1.7; margin-bottom:24px;">
+            Thank you for your purchase. Your full GDPR compliance report for <strong>{{ domain }}</strong> has been generated and emailed to <strong>{{ email }}</strong>.
+        </p>
+        <p style="font-size:14px; color:#64748b; line-height:1.7; margin-bottom:32px;">
+            Please check your inbox — and your spam folder if you don't see it within a few minutes.
+        </p>
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:20px; margin-bottom:32px;">
+            <p style="font-size:13px; color:#15803d; margin:0; line-height:1.6;">
+                Your report includes a full breakdown of all 23 compliance checks, specific details on every failed check, and AI-powered analysis of your privacy policy and terms & conditions.
+            </p>
+        </div>
+        <a href="/" style="display:inline-block; background:#0f2044; color:#ffffff; font-size:14px; font-weight:600; padding:12px 28px; border-radius:8px; text-decoration:none;">Scan Another Domain</a>
+    </div>
+</div>
+{% endblock %}

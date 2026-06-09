@@ -118,3 +118,76 @@ The ClearlyCompliant Team
 
     except Exception as e:
         logger.error(f'Failed to send confirmation email for order {order_id}: {e}')
+
+
+def send_free_summary_email(order_id):
+    try:
+        from scanner.models import ScanResult
+        order = Order.objects.get(id=order_id)
+        scan_result = ScanResult.objects.get(order=order)
+
+        # Calculate score
+        checks = [
+            scan_result.is_https,
+            not scan_result.has_mixed_content,
+            scan_result.has_x_frame_options,
+            scan_result.has_content_security_policy,
+            scan_result.has_x_content_type_options,
+            scan_result.has_referrer_policy,
+            scan_result.has_privacy_policy,
+            scan_result.has_cookie_policy,
+            scan_result.has_terms_and_conditions,
+            scan_result.has_data_retention_policy,
+            scan_result.has_cookie_banner,
+            scan_result.has_cookie_preferences_link,
+            scan_result.has_form_consent_checkbox,
+            not scan_result.has_contact_form or scan_result.has_privacy_policy,
+            not scan_result.has_newsletter_signup or scan_result.has_cookie_banner,
+            not scan_result.has_login or scan_result.has_privacy_policy,
+            not scan_result.has_ecommerce or scan_result.has_privacy_policy,
+            not scan_result.has_google_analytics,
+            not scan_result.has_facebook_pixel,
+            scan_result.has_unsubscribe_mechanism,
+            scan_result.has_contact_info,
+            scan_result.has_dpo_info,
+            scan_result.has_data_subject_rights,
+        ]
+
+        passed = sum(1 for c in checks if c)
+        total = len(checks)
+        score = int((passed / total) * 100)
+
+        if score >= 80:
+            rating = 'Good'
+        elif score >= 50:
+            rating = 'Needs Improvement'
+        else:
+            rating = 'Poor'
+
+        results_url = f'https://clearlycompliant.co.uk/results/{order.free_result_token}/'
+
+        email = EmailMessage(
+            subject=f'Your Free GDPR Scan Results — {order.domain}',
+            body=f"""Hi,
+
+Your free GDPR compliance scan for {order.domain} is complete.
+
+OVERALL SCORE: {score}% — {rating}
+{passed} of {total} checks passed.
+
+To see the full breakdown of your results including which specific checks failed and why, plus our AI-powered analysis of your privacy policy and terms & conditions, visit:
+
+{results_url}
+
+Upgrade to the full report for just £29.99 to receive a detailed PDF with actionable recommendations.
+
+The ClearlyCompliant Team
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[order.email],
+        )
+        email.send()
+        logger.info(f'Free summary email sent to {order.email}')
+
+    except Exception as e:
+        logger.error(f'Failed to send free summary email for order {order_id}: {e}')

@@ -6,7 +6,7 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from .models import Order
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -17,7 +17,6 @@ REPORT_PRICE_PENCE = 2999  # £29.99
 def is_valid_domain(domain):
     domain = domain.strip().lower()
     domain = re.sub(r'^https?://', '', domain)
-    domain = domain.strip('/')
     pattern = r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
     return bool(re.match(pattern, domain))
 
@@ -32,19 +31,14 @@ def get_coupon_from_promo(promo):
     """Extract and retrieve the coupon from a promotion code object."""
     try:
         promotion = getattr(promo, 'promotion', None)
-        print(f'>>> promotion: {promotion}')
         if promotion:
             coupon_id = getattr(promotion, 'coupon', None)
-            print(f'>>> coupon_id: {coupon_id}')
             if coupon_id:
-                coupon = stripe.Coupon.retrieve(coupon_id)
-                print(f'>>> retrieved coupon: {coupon}')
-                return coupon
+                return stripe.Coupon.retrieve(coupon_id)
     except Exception as e:
         print(f'>>> promotion path error: {e}')
     try:
         coupon = getattr(promo, 'coupon', None)
-        print(f'>>> direct coupon: {coupon}')
         if coupon:
             if isinstance(coupon, str):
                 return stripe.Coupon.retrieve(coupon)
@@ -52,6 +46,78 @@ def get_coupon_from_promo(promo):
     except Exception as e:
         print(f'>>> direct coupon error: {e}')
     return None
+
+
+def checkout(request):
+    """Homepage — domain and email input only, no payment."""
+    return render(request, 'orders/checkout.html')
+
+
+def free_results(request, token):
+    """Show free results teaser page."""
+    order = get_object_or_404(Order, free_result_token=token)
+
+    # Mark as viewed
+    if not order.free_results_viewed:
+        order.free_results_viewed = True
+        order.save()
+
+    # Get scan result if available
+    scan_result = None
+    try:
+        scan_result = order.scan_result
+    except Exception:
+        pass
+
+    context = {
+        'order': order,
+        'scan_result': scan_result,
+        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+    }
+    return render(request, 'orders/free_results.html', context)
+
+
+@require_POST
+def start_free_scan(request):
+    """Accept domain and email, create order, start scan."""
+    try:
+        data = json.loads(request.body)
+        domain = data.get('domain', '').strip()
+        email = data.get('email', '').strip()
+
+        domain = re.sub(r'^https?://', '', domain).strip('/')
+
+        if not domain or not email:
+            return JsonResponse({'error': 'Domain and email are required.'}, status=400)
+
+        if not is_valid_domain(domain):
+            return JsonResponse({'error': 'Please enter a valid domain name, e.g. example.com'}, status=400)
+
+        order = Order.objects.create(
+            domain=domain,
+            email=email,
+            report_type=Order.ReportType.FREE,
+            utm_source=data.get('utm_source', ''),
+            utm_medium=data.get('utm_medium', ''),
+            utm_campaign=data.get('utm_campaign', ''),
+            utm_term=data.get('utm_term', ''),
+            utm_content=data.get('utm_content', ''),
+            referrer=data.get('referrer', ''),
+        )
+
+        thread = threading.Thread(target=run_scan_sync, args=(str(order.id),))
+        thread.daemon = True
+        thread.start()
+
+        return JsonResponse({
+            'free': True,
+            'order_id': str(order.id),
+            'domain': order.domain,
+            'email': order.email,
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @require_POST
@@ -104,18 +170,14 @@ def validate_discount_code(request):
 def create_payment_intent(request):
     try:
         data = json.loads(request.body)
-        domain = data.get('domain', '').strip()
-        email = data.get('email', '').strip()
+        token = data.get('token', '').strip()
         promo_code_id = data.get('promo_code_id', '').strip()
 
-        # Normalise domain before validation — strip protocol and trailing slashes
-        domain = re.sub(r'^https?://', '', domain).strip('/')
-
-        if not domain or not email:
-            return JsonResponse({'error': 'Domain and email are required.'}, status=400)
-
-        if not is_valid_domain(domain):
-            return JsonResponse({'error': 'Please enter a valid domain name, e.g. example.com'}, status=400)
+        # Get existing order by token
+        try:
+            order = Order.objects.get(free_result_token=token)
+        except Order.DoesNotExist:
+            return JsonResponse({'error': 'Invalid session. Please start a new scan.'}, status=400)
 
         amount = REPORT_PRICE_PENCE
         discount_code = ''
@@ -135,18 +197,11 @@ def create_payment_intent(request):
             except Exception as e:
                 print(f'>>> Promo retrieval error: {e}')
 
-        order = Order.objects.create(
-            domain=domain,
-            email=email,
-            utm_source=data.get('utm_source', ''),
-            utm_medium=data.get('utm_medium', ''),
-            utm_campaign=data.get('utm_campaign', ''),
-            utm_term=data.get('utm_term', ''),
-            utm_content=data.get('utm_content', ''),
-            referrer=data.get('referrer', ''),
-            discount_code=discount_code,
-            amount_paid=amount,
-        )
+        # Update order to paid type
+        order.report_type = Order.ReportType.PAID
+        order.discount_code = discount_code
+        order.amount_paid = amount
+        order.save()
 
         # If 100% discount, skip payment entirely
         if amount == 0:
@@ -154,7 +209,7 @@ def create_payment_intent(request):
             order.save()
             from mailer.tasks import send_confirmation_email
             send_confirmation_email(str(order.id))
-            thread = threading.Thread(target=run_scan_sync, args=(str(order.id),))
+            thread = threading.Thread(target=send_full_report_sync, args=(str(order.id),))
             thread.daemon = True
             thread.start()
             return JsonResponse({
@@ -167,8 +222,8 @@ def create_payment_intent(request):
             currency='gbp',
             metadata={
                 'order_id': str(order.id),
-                'domain': domain,
-                'email': email,
+                'domain': order.domain,
+                'email': order.email,
             }
         )
 
@@ -180,10 +235,18 @@ def create_payment_intent(request):
             'order_id': str(order.id),
             'amount': amount,
             'amount_display': f'£{amount / 100:.2f}',
+            'domain': order.domain,
+            'email': order.email,
         })
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def send_full_report_sync(order_id):
+    """Generate and send the full PDF report for an already-scanned order."""
+    from reports.tasks import generate_report_task
+    generate_report_task(order_id)
 
 
 @csrf_exempt
@@ -206,30 +269,17 @@ def stripe_webhook(request):
         try:
             order = Order.objects.get(id=order_id)
             order.status = Order.Status.PAID
+            order.report_type = Order.ReportType.PAID
             order.save()
             from mailer.tasks import send_confirmation_email
             send_confirmation_email(str(order.id))
-            thread = threading.Thread(target=run_scan_sync, args=(str(order.id),))
+            thread = threading.Thread(target=send_full_report_sync, args=(str(order.id),))
             thread.daemon = True
             thread.start()
         except Order.DoesNotExist:
             pass
 
     return HttpResponse(status=200)
-
-
-def checkout(request):
-    return render(request, 'orders/checkout.html', {
-        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
-    })
-
-
-def privacy_policy(request):
-    return render(request, 'legal/privacy_policy.html')
-
-
-def terms_and_conditions(request):
-    return render(request, 'legal/terms_and_conditions.html')
 
 
 def order_status(request, order_id):
@@ -239,6 +289,7 @@ def order_status(request, order_id):
             'status': order.status,
             'domain': order.domain,
             'email': order.email,
+            'token': str(order.free_result_token),
         })
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
@@ -250,3 +301,20 @@ def order_status_page(request, order_id):
         return render(request, 'orders/status.html', {'order': order})
     except Order.DoesNotExist:
         return render(request, 'orders/status.html', {'order': None})
+
+
+def privacy_policy(request):
+    return render(request, 'legal/privacy_policy.html')
+
+
+def terms_and_conditions(request):
+    return render(request, 'legal/terms_and_conditions.html')
+
+
+def order_complete(request):
+    domain = request.GET.get('domain', '')
+    email = request.GET.get('email', '')
+    return render(request, 'orders/order_complete.html', {
+        'domain': domain,
+        'email': email,
+    })

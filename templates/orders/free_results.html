@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/free_results.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="results-hero">
+    <div class="results-hero-inner">
+        <p class="results-domain">Results for <strong>{{ order.domain }}</strong></p>
+        {% if scan_result %}
+            {% with passed=0 total=23 %}
+            <div class="score-display" id="score-display">
+                <div class="score-circle" id="score-circle">
+                    <span class="score-number" id="score-number">0%</span>
+                </div>
+                <div class="score-meta">
+                    <div class="score-label" id="score-label">Calculating...</div>
+                    <div class="score-sub" id="score-sub">Scanning complete</div>
+                </div>
+            </div>
+            {% endwith %}
+        {% else %}
+            <p>Your results are still being processed. Please check back in a moment.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if scan_result %}
+<div class="results-body">
+    <div class="results-grid">
+
+        <!-- Left: Section breakdown -->
+        <div class="section-breakdown">
+            <h2>Section Breakdown</h2>
+            <p class="breakdown-sub">Here's how your site performed across each compliance area. Upgrade to see the full details.</p>
+
+            <div class="section-rows" id="section-rows">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="locked-notice">
+                <div class="lock-icon">🔒</div>
+                <div>
+                    <strong>Full details locked</strong>
+                    <p>Upgrade to see exactly which checks failed, why they matter, and get our AI-powered analysis of your privacy policy and terms & conditions.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Upgrade form -->
+        <div class="upgrade-panel">
+            <div class="upgrade-card">
+                <div class="upgrade-header">
+                    <h3>Unlock Your Full Report</h3>
+                    <p>Get the complete breakdown with actionable recommendations and AI-powered policy analysis.</p>
+                </div>
+
+                <ul class="upgrade-features">
+                    <li>✓ Full details on every failed check</li>
+                    <li>✓ AI analysis of your privacy policy</li>
+                    <li>✓ AI analysis of your terms & conditions</li>
+                    <li>✓ Detailed PDF report by email</li>
+                    <li>✓ Actionable recommendations</li>
+                </ul>
+
+                <div class="upgrade-price">£29.99 <span>one-off payment</span></div>
+
+                <div id="upgrade-error" class="error-box" style="display:none;"></div>
+                <div id="upgrade-success" class="success-box" style="display:none;"></div>
+
+                <div id="upgrade-form">
+                    <div class="field-group">
+                        <label>Discount Code <span style="font-weight:400; color:#9ca3af;">(optional)</span></label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="discount-code" placeholder="Enter code" style="text-transform:uppercase; flex:1;">
+                            <button type="button" id="apply-btn" onclick="applyDiscount()" style="width:auto; padding:11px 16px; font-size:14px; margin-top:0;">Apply</button>
+                        </div>
+                        <div id="discount-message" style="margin-top:6px; font-size:13px; display:none;"></div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Card Details</label>
+                        <div id="card-element"></div>
+                    </div>
+
+                    <p style="font-size:13px; color:#64748b; text-align:center; margin-bottom:8px;">⏱ Full report delivered by email within minutes.</p>
+                    <button id="pay-btn" onclick="handleUpgrade()">
+                        <span id="pay-btn-text">Unlock Full Report — £29.99</span>
+                        <span id="pay-btn-spinner" style="display:none;">Processing...</span>
+                    </button>
+                    <p class="secure-note">🔒 Payments secured by Stripe. We never store your card details.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Pass data to JS -->
+<script>
+    const orderToken = '{{ order.free_result_token }}';
+    const stripePublishableKey = '{{ stripe_publishable_key }}';
+
+    // Scan result data for JS score calculation
+    const scanData = {
+        is_https: {{ scan_result.is_https|yesno:"true,false" }},
+        has_mixed_content: {{ scan_result.has_mixed_content|yesno:"true,false" }},
+        has_x_frame_options: {{ scan_result.has_x_frame_options|yesno:"true,false" }},
+        has_content_security_policy: {{ scan_result.has_content_security_policy|yesno:"true,false" }},
+        has_x_content_type_options: {{ scan_result.has_x_content_type_options|yesno:"true,false" }},
+        has_referrer_policy: {{ scan_result.has_referrer_policy|yesno:"true,false" }},
+        has_privacy_policy: {{ scan_result.has_privacy_policy|yesno:"true,false" }},
+        has_cookie_policy: {{ scan_result.has_cookie_policy|yesno:"true,false" }},
+        has_terms_and_conditions: {{ scan_result.has_terms_and_conditions|yesno:"true,false" }},
+        has_data_retention_policy: {{ scan_result.has_data_retention_policy|yesno:"true,false" }},
+        has_cookie_banner: {{ scan_result.has_cookie_banner|yesno:"true,false" }},
+        has_cookie_preferences_link: {{ scan_result.has_cookie_preferences_link|yesno:"true,false" }},
+        has_form_consent_checkbox: {{ scan_result.has_form_consent_checkbox|yesno:"true,false" }},
+        has_contact_form: {{ scan_result.has_contact_form|yesno:"true,false" }},
+        has_newsletter_signup: {{ scan_result.has_newsletter_signup|yesno:"true,false" }},
+        has_login: {{ scan_result.has_login|yesno:"true,false" }},
+        has_ecommerce: {{ scan_result.has_ecommerce|yesno:"true,false" }},
+        has_google_analytics: {{ scan_result.has_google_analytics|yesno:"true,false" }},
+        has_facebook_pixel: {{ scan_result.has_facebook_pixel|yesno:"true,false" }},
+        has_unsubscribe_mechanism: {{ scan_result.has_unsubscribe_mechanism|yesno:"true,false" }},
+        has_contact_info: {{ scan_result.has_contact_info|yesno:"true,false" }},
+        has_dpo_info: {{ scan_result.has_dpo_info|yesno:"true,false" }},
+        has_data_subject_rights: {{ scan_result.has_data_subject_rights|yesno:"true,false" }},
+        has_privacy_policy_for_check: {{ scan_result.has_privacy_policy|yesno:"true,false" }},
+    };
+</script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{% static 'js/free_results.js' %}"></script>
+{% endif %}
+
+{% endblock %}
