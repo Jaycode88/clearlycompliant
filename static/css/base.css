@@ -20,6 +20,7 @@ header .logo {
     font-size: 20px;
     font-weight: 700;
     letter-spacing: -0.3px;
+    text-decoration: none;
 }
 
 header .logo span {
