@@ -37,13 +37,34 @@
                 "name": "ClearlyCompliant",
                 "email": "admin@clearlycompliant.co.uk",
                 "url": "https://www.clearlycompliant.co.uk"
+            },
+            "hasMerchantReturnPolicy": {
+                "@type": "MerchantReturnPolicy",
+                "applicableCountry": "GB",
+                "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+            },
+            "shippingDetails": {
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                    "@type": "MonetaryAmount",
+                    "value": "0",
+                    "currency": "GBP"
+                },
+                "deliveryTime": {
+                    "@type": "ShippingDeliveryTime",
+                    "handlingTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": 0,
+                        "maxValue": 0
+                    }
+                },
+                "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "GB"
+                }
             }
         },
-        "category": "GDPR Compliance Software",
-        "audience": {
-            "@type": "BusinessAudience",
-            "audienceType": "UK businesses with websites"
-        }
+        "category": "GDPR Compliance Software"
     }
     </script>
 
