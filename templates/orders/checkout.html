@@ -152,8 +152,8 @@
 
 <!-- Free Scan Form -->
 <section class="checkout-section" id="get-report">
-    <h2>Run Your Free GDPR Compliance Check</h2>
-    <p class="section-sub">Enter your domain and email below. We'll scan your site and show you your compliance score in minutes — completely free.</p>
+    <h2>Get Your Free GDPR Compliance Score</h2>
+    <p class="section-sub">Enter your domain and email below. We'll scan your site and show you your score in minutes — completely free.</p>
 
     <div class="checkout-card">
         <div class="price-tag">Free <span>instant compliance score</span></div>
@@ -173,8 +173,14 @@
                 <input type="email" id="email" placeholder="you@example.com">
                 <small>We'll send your free results here and keep you updated.</small>
             </div>
+            <div class="field-group">
+                <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-weight:400;">
+                    <input type="checkbox" id="consent-checkbox" style="width:auto; margin-top:3px; flex-shrink:0;">
+                    <span style="font-size:13px; color:#64748b; line-height:1.5;">I agree to receive my free scan results and occasional compliance updates by email. You can unsubscribe at any time. <a href="/privacy-policy/" style="color:#0f2044;">Privacy Policy</a></span>
+                </label>
+            </div>
             <button id="submit-btn" onclick="handleScan()">
-                <span id="btn-text">Check My Website — Free</span>
+                <span id="btn-text">Scan My Website — Free</span>
                 <span id="btn-spinner" style="display:none;">Starting scan...</span>
             </button>
             <p class="secure-note">🔒 We never share your data. Unsubscribe at any time.</p>

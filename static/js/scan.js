@@ -40,6 +40,8 @@ function getUtmParams() {
 async function handleScan() {
     const domain = document.getElementById('domain').value.trim();
     const email = document.getElementById('email').value.trim();
+    const consentCheckbox = document.getElementById('consent-checkbox');
+    const consent = consentCheckbox ? consentCheckbox.checked : true;
     const errorDiv = document.getElementById('error-message');
     const btn = document.getElementById('submit-btn');
     const btnText = document.getElementById('btn-text');
@@ -49,6 +51,12 @@ async function handleScan() {
 
     if (!domain || !email) {
         errorDiv.textContent = 'Please enter your domain and email address.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    if (!consent) {
+        errorDiv.textContent = 'Please agree to receive your scan results by email.';
         errorDiv.style.display = 'block';
         return;
     }

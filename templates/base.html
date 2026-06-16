@@ -31,6 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cookie-notice.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
@@ -174,6 +175,7 @@
                 <strong style="color:#ffffff; margin-bottom:4px;">Legal</strong>
                 <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
                 <a href="{% url 'terms_and_conditions' %}">Terms & Conditions</a>
+                <a href="#" onclick="showCookieSettingsPanel(); return false;">Cookie Settings</a>
             </div>
         </div>
         <div class="footer-bottom" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
@@ -183,5 +185,6 @@
             </a>
         </div>
     </footer>
+    <script src="{% static 'js/cookie-notice.js' %}"></script>
 </body>
 </html>
