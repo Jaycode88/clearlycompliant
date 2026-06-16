@@ -174,6 +174,7 @@ def generate_report(order, scan_result):
         },
         {
             'title': '3. Consent & Cookie Management',
+            'note': 'Note: If your website uses only essential cookies (such as session and security cookies), a cookie consent banner is not legally required under PECR. A lower score in this section may not represent a compliance risk if you do not use analytics, advertising, or other non-essential cookies.',
             'checks': [
                 (
                     'Cookie Consent Banner',
@@ -411,6 +412,20 @@ def generate_report(order, scan_result):
     for section in sections:
         elements.append(section_heading(section['title']))
         elements.append(HRFlowable(width='100%', thickness=1, color=LIGHT_GREY, spaceAfter=3*mm))
+        if section.get('note'):
+            note_data = [[
+                Paragraph(section['note'], ParagraphStyle('notetext', fontSize=10, leading=15, textColor=HexColor('#374151'))),
+            ]]
+            note_table = Table(note_data, colWidths=[170*mm])
+            note_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), INFO_BLUE_BG),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(note_table)
+            elements.append(Spacer(1, 3*mm))
         for label, passed_check, description, recommendation in section['checks']:
             elements.append(make_check_row(label, passed_check, description, recommendation))
             elements.append(Spacer(1, 2*mm))
